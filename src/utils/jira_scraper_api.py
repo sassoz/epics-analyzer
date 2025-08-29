@@ -201,6 +201,12 @@ class JiraScraper:
                                         fields="summary,description,issuetype,status,assignee,duedate,fixVersions,created,updated,subtasks,issuelinks")
             data = self._normalize_issue(raw)
 
+            # --- NEW: Validate data before saving ---
+            if not data.get("issuetype") or not data.get("summary"):
+                logger.error(f"Validation failed for {issue_key}: 'issuetype' or 'summary' is missing. Skipping file write.")
+                self.issues_to_retry[issue_key] = issue_url
+                return None
+
             # write JSON file
             with open(self._issue_file(issue_key), "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
