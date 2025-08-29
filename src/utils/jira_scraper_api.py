@@ -120,7 +120,7 @@ class JiraScraper:
                     "link_type": t.get("name"),
                     "direction": "outward",
                     "key": k,
-                    "url": f'{self.client.browse}/{k}"
+                    "url": f"{self.client.browse}/{k}"
                 })
             if "inwardIssue" in link:
                 k = link["inwardIssue"]["key"]
@@ -129,7 +129,7 @@ class JiraScraper:
                     "link_type": t.get("name"),
                     "direction": "inward",
                     "key": k,
-                    "url": f'{self.client.browse}/{k}"
+                    "url": f"{self.client.browse}/{k}"
                 })
 
         # issues in epic (downstream) if this is an Epic
@@ -157,7 +157,7 @@ class JiraScraper:
                 data["issue_links"].append({
                     "relation_type": "issue_in_epic",
                     "key": k,
-                    "url": f'{self.client.browse}/{k}"
+                    "url": f"{self.client.browse}/{k}"
                 })
 
         return data
