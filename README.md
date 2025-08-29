@@ -4,7 +4,7 @@ A comprehensive tool that automates extraction, analysis, visualization, and rep
 
 ## **Features**
 
-* **Automated JIRA Extraction**: Logs into JIRA and recursively extracts raw data from Business Epics and all linked issues.
+* **Automated JIRA Extraction**: Connects to the JIRA API and recursively extracts raw data from Business Epics and all linked issues.
 * **Modular Metric Analysis**: Runs specialized analyses across several domains:
 
   * **Scope Analysis**: Assesses scope, complexity, and the distribution of work across teams/Jira projects.
@@ -24,7 +24,7 @@ A comprehensive tool that automates extraction, analysis, visualization, and rep
 
 The process is split into several logical steps to ensure high data quality and reproducible results:
 
-1. **Data Collection (`jira_scraper.py`)**: Extracts raw data for the specified JIRA epics and all linked issues, storing them as individual JSON files.
+1. **Data Collection (`jira_scraper_api.py`)**: Extracts raw data for the specified JIRA epics and all linked issues via the JIRA REST API, storing them as individual JSON files.
 2. **Data Preparation (`project_data_provider.py`)**: Loads raw data for an epic, builds a dependency tree, and centrally provides all relevant information (details, activities) to the analysis modules.
 3. **Metric Analysis (`features/*_analyzer.py`)**: The `AnalysisRunner` executes each specialized analyzer. Each analyzer processes data from the `ProjectDataProvider` and returns a structured result with its specific metrics.
 4. **Content Analysis (`main_scraper.py`)**: An LLM is used to create a qualitative summary from the JIRA ticket content.
@@ -44,9 +44,12 @@ The process is split into several logical steps to ensure high data quality and 
    ```
 
 2. **Set environment variables:**
-   Create a `.env` file in the project root and add your Azure AI credentials:
+   Create a `.env` file in the project root and add your JIRA and Azure AI credentials:
 
    ```
+   JIRA_API_TOKEN="YOUR_JIRA_PERSONAL_ACCESS_TOKEN"
+   JIRA_EMAIL="your.email@example.com"
+   
    AZURE_OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
    AZURE_OPENAI_API_VERSION="YOUR_API_VERSION"
    AZURE_OPENAI_ENDPOINT="YOUR_OPENAI_ENDPOINT"
@@ -145,9 +148,9 @@ jira-business-epic-analyzer/
 │   ├── utils/             # Utilities and clients
 │   │   ├── azure_ai_client.py
 │   │   ├── config.py
-│   │   ├── html_translator.py   # NEW: translation module
-│   │   ├── jira_scraper.py
-│   │   └── ...
+│   │   ├── html_translator.py
+│   │   ├── jira_api_client.py
+│   │   └── jira_scraper_api.py
 │   └── main_scraper.py    # Orchestrator script
 ├── templates/
 │   └── epic-html_template.html   # HTML template for reports
@@ -155,77 +158,17 @@ jira-business-epic-analyzer/
 └── README.md
 ```
 
-## **Automated Translation**
-
-The tool includes a built-in function to automatically translate generated German HTML reports into English. This process is handled by `src/utils/html_translator.py`.
-
-### **How it works**
-
-Translation uses an efficient **batch strategy**:
-
-1. All text to be translated (including headings, lists, tables, and image captions) is extracted from the German HTML file.
-2. This collection is sent in a single call to an LLM specialized in telecom and IT jargon.
-3. The LLM returns a structured JSON object with the translations.
-4. The script reinserts the English texts into the original HTML structure and saves the result as a new file (`*_summary_english.html`).
-
-This approach ensures high speed and contextually accurate translation of domain terminology. The function is controlled via the `--translate` command-line argument.
-
-## **Prompt Templates**
-
-LLM instructions (prompts) are stored as external YAML files in the `prompts/` directory for easy customization. The `prompt_loader.py` module loads these templates.
-
-* `business_value_prompt.yaml`: Defines the system prompt for extracting structured data from the “Business Value” field in JIRA during scraping.
-* `summary_prompt.yaml`: Template for generating a comprehensive qualitative JSON summary of the entire issue tree (goals, features, etc.).
-* `time_creep_summary.yaml`: Controls the LLM analysis of captured schedule shifts and produces a textual assessment of project dynamics.
-* `html_generator_prompt.yaml`: Defines instructions for the LLM to create the full HTML report from the final merged JSON data object.
-
-## **AI Integration & LLM Usage**
-
-All interaction with language models is encapsulated in `src/utils/azure_ai_client.py`.
-
-### **Central `AzureAIClient`**
-
-The `AzureAIClient` class serves as a unified interface (wrapper) for different Azure AI services. This keeps the rest of the codebase agnostic to the specific backend used for a request. The client automatically routes requests to the correct service based on the model name provided.
-
-### **Supported Model Families**
-
-The client is designed to work with two main categories of Azure services:
-
-1. **Azure OpenAI Service**: Used for powerful multimodal models like `gpt-4o` or `gpt-4.1-mini`, which can process both text and images.
-2. **Azure AI Foundation Models**: Endpoint for a variety of open-source models such as Llama or Mistral, primarily optimized for text-to-text tasks.
-
-The mapping of which model is used for which task (e.g., HTML generation, content summarization) is centrally defined in `src/utils/config.py` and can be adjusted there to test different models.
-
-## **Logging**
-
-The program includes robust logging configured in `src/utils/logger_config.py` to make execution traceable and debugging easier.
-
-Two kinds of logs are written in parallel:
-
-1. **File log (`logs/jira_scraper.log`)**: Records all events from log level INFO upward. This file contains a complete record of steps taken, including successful operations, and is useful for later analysis and debugging.
-2. **Console log**: By default, only messages with log level WARNING or higher are printed to the terminal. This keeps console output concise and focused on important warnings or critical errors that may require intervention.
-
-Additionally, a separate log file for **token usage** (`logs/token_usage.jsonl`) is maintained to provide transparent tracking of LLM call costs.
-
-## **Configuration**
-
-Configuration happens in two central places:
-
-1. **`src/utils/config.py`**: Contains global configurations such as paths, default flags, and LLM model names for specific tasks (`LLM_MODEL_SUMMARY`, `LLM_MODEL_TIME_CREEP`, etc.).
-2. **`.env` file**: Holds sensitive credentials (API keys, endpoints) and is automatically loaded by the application. This file should not be committed to version control.
-
 ## **Requirements**
 
 ### **Software**
 
 * Python 3.10+
-* Google Chrome browser
 
 ### **Python Libraries**
 
 Required packages are listed in `requirements.txt`. Key ones include:
 
-* `selenium` & `beautifulsoup4`: For web scraping.
+* `beautifulsoup4`: For HTML parsing (if needed by other parts of the project).
 * `openai`: Official client for Azure OpenAI.
 * `pyyaml`: For loading prompt templates.
 * `python-dotenv`: For loading environment variables.
