@@ -1,0 +1,70 @@
+# prompts/business_impact_prompt.yaml
+user_prompt_template: |
+  Analysiere den folgenden Beschreibungstext. Deine **Hauptaufgabe** ist es, alle expliziten Informationen zum Geschäftswert (Business Value) zu finden und präzise in die unten definierte JSON-Struktur zu extrahieren.
+
+  {description_text}
+
+  Fülle die folgende JSON-Struktur. Erfinde NIEMALS Daten. Wenn keine Information vorhanden ist, lasse Felder leer ("") oder setze Zahlenwerte auf 0.
+
+  **NEUE REGELN FÜR MAXIMALE DETAILTIEFE:**
+  1.  Die Informationen für die `business_value`-Felder (insbesondere `justification`) sollen so **vollständig und detailreich wie möglich** aus dem Text übernommen werden.
+  2.  **VOLLSTÄNDIGKEIT BEI ZAHLEN:** Extrahiere **alle** numerischen Werte, Skalen (z.B. "Scale: 13", "Scale: 20"), Geldbeträge, Zeiträume und andere quantitative Daten exakt so, wie sie im Text stehen.
+  3.  **KONTEXT IST WICHTIG:** Informationen aus Nebensätzen oder sogar Fußnoten, die den Business Value erläutern (z.B. Bezugszeiträume, Berechnungsformeln), sollen vollständig in die entsprechenden `justification`- oder Text-Felder übernommen werden.
+
+  **REGELN ZUR TRENNUNG:**
+  1.  **Extraktion hat Priorität:** Alle oben genannten Details gehören **IMMER** in das `business_value`-Objekt.
+  2.  Diese Informationen dürfen **NIEMALS** in der `cleaned_description` verbleiben.
+  3.  Die `cleaned_description` soll nur das enthalten, was übrig bleibt: die rein funktionale Beschreibung des Vorhabens (das 'Was' und 'Wie'), aber nicht das geschäftliche 'Warum'.
+
+  Beispiel für eine vollständige Ausgabe im JSON Format:
+  {{
+    "cleaned_description": "Die Nutzer sollen in der Lage sein, den AGB-Prozess direkt im EOS-System zu bearbeiten. Aktuell geschieht dies manuell in verschiedenen Systemen. Ziel ist die Erweiterung der AGB-Kette um neue Features.",
+    "business_value": {{
+      "business_impact": {{
+        "scale": 3,
+        "revenue": "Steigerung um 5% innerhalb der ersten 12 Monate nach Launch.",
+        "cost_saving": "Aufwandsreduzierung durch optimierte Arbeit mit EOS und Wegfall von 3 manuellen Prozessschritten.",
+        "risk_loss": "",
+        "justification": "Das Vorhaben schafft durch die optimierte Arbeit mit EOS einen schnelleren und auch besseren Serviceprozess, welcher in Aufwandsreduzierung resultiert. Fußnote 1: Bezugszeitraum ist 12 Monate nach Launch."
+      }},
+      "strategic_enablement": {{
+        "scale": 2,
+        "risk_minimization": "Vermeidung von manuellen Fehlern bei der Dateneingabe.",
+        "strat_enablement": "Optimierung des Serviceprozesses durch direkte Bearbeitung in EOS statt manuell in verschiedenen Produktionsstraßen. Dies ist ein Enabler für die strategische Initiative 'Prozessdigitalisierung 2025'.",
+        "justification": "Die Nutzer arbeiten schneller und effizienter im System, können dadurch mehr Zeit für die Beratung der Kunden aufwänden."
+      }},
+      "time_criticality": {{
+        "scale": 2,
+        "time": "Q3 2025",
+        "justification": "Für die MitarbeiterInnen aus SGrK, die täglich mit EOS arbeiten, ist es notwendig, dass diese AGB-Kette mit Features erweitert wird, da die alte Lösung zum 31.12.2025 abgeschaltet wird."
+      }}
+    }}
+  }}
+
+  Wenn der Text KEINE business_value Informationen enthält, gib die leere JSON-Struktur zurück:
+  {{
+    "business_value": {{
+      "business_impact": {{
+        "scale": 0,
+        "revenue": "",
+        "cost_saving": "",
+        "risk_loss": "",
+        "justification": ""
+      }},
+      "strategic_enablement": {{
+        "scale": 0,
+        "risk_minimization": "",
+        "strat_enablement": "",
+        "justification": ""
+      }},
+      "time_criticality": {{
+        "scale": 0,
+        "time": "",
+        "justification": ""
+      }}
+    }}
+  }}
+
+  Ausgabeformat:
+  - Gib IMMER die vollständige JSON-Struktur zurück.
+  - Gib NUR die befüllte JSON-Struktur zurück ohne zusätzlichen Text, beginnend mit {{

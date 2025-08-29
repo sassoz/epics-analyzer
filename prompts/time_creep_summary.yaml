@@ -1,0 +1,26 @@
+user_prompt_template: |
+  Analysiere das beigefügte IT-Projekt mit der Jira ID **{epic_id}** und die darunterliegende Zeitleistenanalyse der Terminänderungen (insbesondere "TIME_CREEP" Ereignisse).
+  Erstelle eine **strukturierte Übersicht** der Terminverschiebungen des Projekts
+  **Lege dabei den Hauptfokus auf größere Terminverschiebungen (mehrere Monate, mehrere Quartale) und erwähne kleinere Verschiebungen (weniger als 1 Monat) nur, wenn sie in ihrer Häufung relevant sind, oder ignoriere sie, wenn sie nicht signifikant sind.**
+  ** Sei kurz & präzise in deinen Formulierungen
+
+  - Bewerte hier die signifikantesten Terminverschiebungen (TIME_CREEP) nach ihrer Dauer und wie oft sie aufgetreten sind.
+  - Formuliere die Beschreibung der einzelnen größeren Verzögerungen zum Beispiel wie folgt: `[ID]: erfuhr eine Terminverschiebung von etwa [Dauer in Wochen oder Monaten] auf den [neues Datum].`
+  - Wenn die Dauer nicht genau bestimmbar ist, verwende "unbestimmter Dauer".
+  - **Fokus auf größere Verschiebungen**: Kleinere Verschiebungen (unter 1 Monat) sollen hier nicht aufgeführt werden, es sei denn, ihre Häufung ist für die Gesamtbewertung entscheidend.
+  - Fokussiere dich auf 'Target end' Verschiebungen; ergänze Terminverschiebungen bei 'fix version' nur dann, wenn es zu einer relevanten Veränderung der Bewertung erforderlich ist
+  - Falls es mehrere Terminverschiebungen gibt, fass diese zusammen oder fokussiere dich auf die größere/wichtigere
+
+  - **Hauptprojekt ({epic_id}):**
+  - **Teilprojekte/Untertickets:**
+    - Liste hier nur die IDs der Teilprojekte auf, die **signifikante (d.h. größere)** TIME_CREEP-Ereignisse haben, gefolgt von deren spezifischen Verschiebungen.
+
+  **Beigefügte Informationen:**
+
+  **1. Allgemeine Epic-Zusammenfassung (JSON):**
+  ```json
+  {epic_id_json_summary}
+
+  **2. Detaillierte Zeitleistenanalyse der Terminänderungen (TIME_CREEP Events):**
+  ```json
+  {time_creep}

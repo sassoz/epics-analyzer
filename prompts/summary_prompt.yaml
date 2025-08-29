@@ -1,0 +1,78 @@
+# prompts/summary_prompt.yaml
+user_prompt_template: |
+  Sie sind ein Product Owner in einem Telekommunikationsunternehmen und arbeiten mit einem IT-Team.
+  Ihre Aufgabe ist es, eine detaillierte Zusammenfassung der Geschäftsanforderungen zu erstellen, die in einem Business Epic und den zugehörigen Issues für Ihr IT-Team beschrieben sind. Folgen Sie diesen Schritten:
+  1. Sichten Sie sorgfältig den unten angehängten JSON-Context der das Business Epic sowie die angehängten Portfolio Epics, Epics und anderen Jira-Issues umfasst
+
+  2. Erstellen Sie eine umfassende Zusammenfassung der im Business Epic und den zugehörigen Issues beschriebenen Geschäftsanforderungen:
+
+     a.) **Gesamtziel** des Business Epics präzise & verständlich zusammengefassen => nutze für das Gesamtziel insbesondere die Felder 'description' und 'title' des Business Epics; stelle sicher, dass das Gesamtziel in 2-3 Sätzen beschrieben ist und klar wird, für wen etwas verbessert/verändert wird, was verbessert/verändert wird und was das Gesamtziel der geplanten Verbesserung/Verändeurng ist
+
+     b.) **Einzelziele** präzise & verständlich zusammengefassen => nutze für die Einzelziele insbesondere die Felder 'description' und 'title' aller über 'issue_links' direkt mit dem Business Epic verbundenen Jira-Issues;  jedes Einzelziel sollte in 1-2 Sätzen beschrieben sein; fokussiere Dich auf die angetrebte Verbesserung/Veränderung; beschreibe nicht die Funktion! falls es mehr als 4 Einzelziele sind, versuche diese sinnvoll zusammenzufassen
+
+     c.) **Geschäftlicher Nutzen ("Business Value")** => nutze dafür die 'business_value'-Inhalte des Business Epics; konzentriere Dich auf Zahlen/Daten falls vorhanden; formuliere kurz & präzise; falls die angehängten Jira Issues keine Informationen beinhalten, schreibe 'Keine Informationen verfügbar'
+
+     d.) **Schlüsselfunktionen** oder angeforderte Funktionalitäten und erläutern => nutze dafür insbesondere die Felder 'description', 'title' und 'key' aller Jira-Issues, die als 'issue_links' mit dem Business Epic verbunden sind; fokussiere dich auf die konkrete Funktion ("WAS"); beschreibe diese in 1-2 kurzen, präzisen Sätzen; falls die Funktion sehr umfangreich ist, konzentriere dich auf die wichtigesten 1-2 Elemente der Funktion
+
+
+  3. Formatieren Sie Ihre Zusammenfassung wie folgt:
+     - Verwenden Sie klare, präzise Sprache, die für ein IT-Team geeignet ist
+     - Organisieren Sie Informationen in einer logischen Struktur (z.B. Aufzählungspunkte, nummerierte Listen)
+     - Fügen Sie Abschnittsüberschriften für eine einfache Navigation ein
+     - Stellen Sie sicher, dass alle wichtigen Punkte aus dem Business Epic und den zugehörigen Issues abgedeckt sind
+     - Falls die angehängten Jira Issues keine Informationen beinhalten, schreibe 'Keine Informationen verfügbar'
+
+  Überprüfen Sie nach der Erstellung Ihrer Zusammenfassung, ob diese den gesamten Umfang des Business Epics und der zugehörigen Issues genau wiedergibt, ohne wesentliche Details auszulassen.
+  DON'T MAKE UP FACTS!!!
+  !!! Antworten Sie immer auf Deutsch!!!
+
+  Antworte ausschließlich mit einem gültigen JSON-Objekt und ohne erklärenden Text.
+  {{
+    "epicId": "EPIC-ID",
+    "title": "Epic-Titel",
+    "ziele": {{
+      "gesamtziel": "Zusammenfassung des übergreifendes Ziels des Business Epics, wie dieses erreicht wird und zu welchem geplanten Zeitpunkt dieses Ziel erreicht wird",
+      "einzelziele": [
+        "Einzelziel 1",
+        "Einzelziel 2",
+        "Einzelziel 3"
+      ]
+    }},
+    "businessValue": {{
+      "businessImpact": {{
+        "skala": 0,
+        "beschreibung": "Beschreibung des Nutzens aus Umsatzsteigerung und/oder Kosteneinsparung"
+      }},
+      "strategicEnablement": {{
+        "skala": 0,
+        "beschreibung": "Beschreibung des strategischen Nutzens"
+      }},
+      "timeCriticality": {{
+        "skala": 0,
+        "beschreibung": "Beschreibung der zeitlichen Kritikalität"
+      }}
+    }},
+    "funktionen": [
+      {{
+        "id": "TICKET-ID-1",
+        "titel": "Funktionstitel 1",
+        "funktionalitäten": [
+          "Funktionalität 1.1",
+          "Funktionalität 1.2",
+          "Funktionalität 1.3"
+        ]
+      }},
+      {{
+        "id": "TICKET-ID-2",
+        "titel": "Funktionstitel 2",
+        "funktionalitäten": [
+          "Funktionalität 2.1",
+          "Funktionalität 2.2",
+          "Funktionalität 2.3"
+        ]
+      }}
+    ]
+  }}
+
+  ### JIRA-ISSUES ###
+  {json_context}

@@ -1,0 +1,42 @@
+# prompts/html_generator_prompt.yaml
+user_prompt_template: |
+  You are an expert assistant tasked with creating a rich HTML report page from a comprehensive JSON data object, following the structure of a provided HTML template.
+
+  Here are the documents you will work with:
+
+  1. Template HTML:
+  <template_html>
+  {template_html}
+  </template_html>
+
+  2. Complete Epic Data Object (JSON):
+  <complete_epic_data>
+  {complete_epic_data}
+  </complete_epic_data>
+
+  Your task is to create a new HTML page by accurately populating the template with the provided data. Follow these steps meticulously:
+
+  1.  **Analyze the Template Structure**: Understand the different sections of the template HTML (e.g., "Überblick", "Business Value", "Größe & Komplexität", "Zeitplan").
+
+  2.  **Map JSON Data to HTML Sections**: Create the new HTML document by replacing the placeholder content in the template with the corresponding information from the `{{complete_epic_data}}` JSON. Use the following mapping guide:
+      * **Main Header**: Use the `epicId` and `title` fields.
+      * **Status Box**: Use the `status` field to populate the content of the `<div class="status-box">`.
+      * **"Überblick und Gesamtziel" & "Einzelziele"**: Use the content from the `ziele` object.
+      * **"Geschäftlicher Nutzen (Business Value)"**: Use the data from the `businessValue` object for the "Business Impact", "Strategic Enablement", and "Time Criticality" sections.
+      * **"Schlüsselfunktionen"**: Iterate through the `funktionen` array to create the feature cards.
+      * **"Größe & Komplexität"**: This section has two text boxes.
+          * **Left Box**: Use the data from the `scope_summary` object to list the statistics: `total_issues`, `total_epics_found`, `total_stories_found`, and the issue distribution from `project_distribution`.
+          * **Right Box**: Use **only** the text content from the `scope_summary.scope_evaluation` field to populate this box.
+      * **"Zeitplan, Workflow, Time Creep"**:
+          * For Zeitplan ("Target Start", "Target End" und "Fix Versions") use the json data `target_start`, `target_end` und `fix_versions`; format "Target Start" and "Target End" as "DD.MM.YYYY"
+          * For the workflow durations ("FUNNEL", "ANALYSIS", "CODING TIME" etc.), use the data from `epic_status_durations` and `coding_duration`; if there are no data for certain workflow durations omit this worksflow step completely
+          * For the text summary about delays and status, use the content of the `time_creep_summary_llm` string. never use any `<pre style='...'</pre>` tags
+      * **"Backlog" Image**: Use the image path provided in `backlog_development_plot_path` as the `src` for the backlog image tag.
+      * **"Jira Hierarchie" Image**: The path for this image is constructed as `{{epicId}}_issue_tree.png`.
+
+  3.  **Adhere to General Formatting Rules**:
+      * **Jira Links**: Whenever a Jira issue ID (e.g., BEMABU-2067, MAGBUS-99313) is mentioned, format it as a link: `<a href="https://jira.telekom.de/browse/ISSUE-ID">ISSUE-ID</a>`.
+      * **Data Integrity**: NEVER MAKE UP FACTS. Only use information explicitly provided in the `{{complete_epic_data}}` object. If data for a section is missing, state that clearly (e.g., "Keine Daten verfügbar").
+      * **Structure**: Strictly maintain the HTML tags and class structures from the template.
+
+  4.  **Final Output**: Enclose the complete, final HTML document within `<html_output>` tags. Ensure the entire structure, including `<!DOCTYPE html>`, `<html>`, `<head>`, and `<body>`, is present.

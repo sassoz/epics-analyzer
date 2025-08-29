@@ -1,0 +1,62 @@
+
+# # # # # # # # # # # # # # # # # # # #
+#        GENERIERTE DATEIEN         #
+# # # # # # # # # # # # # # # # # # # #
+
+# Ignoriere das gesamte Datenverzeichnis, da es nur generierte Ausgaben enthält
+# (HTML-Berichte, JSON-Zusammenfassungen, Bilder, etc.)
+/data/
+
+# Ignoriere das Log-Verzeichnis
+/logs/
+
+# Ignoriere Alte Dateiversionen
+/_Alte Versionen/
+
+# # # # # # # # # # # # # # # # # # # #
+#        ABHÄNGIGKEITEN & UMGEBUNG     #
+# # # # # # # # # # # # # # # # # # # #
+
+# Ignoriere die Datei mit den Umgebungsvariablen, da sie sensible Schlüssel enthält
+.env
+
+# Ignoriere virtuelle Umgebungen von Python
+/venv/
+/.venv/
+/env/
+/ENV/
+/env.bak/
+/venv.bak/
+
+
+# # # # # # # # # # # # # # # # # # # #
+#       PYTHON CACHE & ARTEFAKTE      #
+# # # # # # # # # # # # # # # # # # # #
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+
+# # # # # # # # # # # # # # # # # # # #
+#      BETRIEBSSYSTEM-DATEIEN       #
+# # # # # # # # # # # # # # # # # # # #
+
+# Ignoriere Metadaten-Dateien von macOS
+.DS_Store
+
+# # # # # # # # # # # # # # # # # # # #
+#         BENUTZERDEFINIERTE DATEIEN        #
+# # # # # # # # # # # # # # # # # # # #
+
+# Ignoriere die Liste der Business Epics, da diese benutzerspezifisch ist
+# Es wird empfohlen, stattdessen eine Vorlagendatei wie 'BE_Liste.example.txt' zu committen
+BE_Liste*.txt
+/src/utils/__pycache__
+/src/utils/__pycache__
+/_Backup
+/src/utils/__pycache__
+/src/utils/__pycache__
+/src/utils/__pycache__

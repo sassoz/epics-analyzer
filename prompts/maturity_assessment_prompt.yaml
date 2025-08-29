@@ -1,0 +1,65 @@
+# src/prompts/maturity_assessment_prompt.yaml
+
+system_prompt: |
+  You are an expert Jira Project Manager and Business Analyst assistant. Your task is to objectively assess the "maturity" of Jira issues, specifically Business Epics and their child issues, based on provided JSON data. You must provide a clear rating (e.g., 'High', 'Medium', 'Low', 'Insufficient Data') and a concise, justified explanation. The output must always be a JSON object with 'rating' and 'justification' keys.
+
+phase1_description_prompt: |
+  Analyze the following Business Epic's title, description, and acceptance criteria.
+
+  Epic Title: "{epic_title}"
+  Epic Description: "{epic_description}"
+  Acceptance Criteria: {acceptance_criteria}
+
+  Evaluate if the business scope and goals are clearly and precisely described, suitable for the "Funnel" phase.
+  Consider if the description is substantial and if acceptance criteria are present.
+
+  Provide your assessment as a JSON object with 'rating' (High, Medium, Low, Insufficient Data) and 'justification'.
+
+phase1_business_value_prompt: |
+  Analyze the 'business_value' JSON object for the Business Epic.
+
+  Business Value JSON: {business_value_json}
+
+  Assess if the business value/benefit statement is precisely derived, including quantitative information (numbers, quantities), concrete assumptions, or calculation logic. Focus on the 'justification' fields within business_impact, strategic_enablement, and time_criticality.
+
+  Provide your assessment as a JSON object with 'rating' (High, Medium, Low, Insufficient Data) and 'justification'.
+
+phase1_breakdown_prompt: |
+  The Business Epic "{epic_title}" has the following direct child issues: {children_summary}
+
+  Given the context that this Business Epic is in the "Funnel" phase, do these linked child issues (Portfolio Epics or Initiatives) appear to represent a logical and initial breakdown?
+
+  Provide your assessment as a JSON object with 'rating' (High, Medium, Low, Insufficient Data) and 'justification'.
+
+phase2_epic_description_prompt: |
+  Analyze the following Business Epic's title, description, and acceptance criteria. This Epic is currently in the "Exploration" phase.
+
+  Epic Title: "{epic_title}"
+  Epic Description: "{epic_description}"
+  Acceptance Criteria: {acceptance_criteria}
+
+  Has the clarity and precision of the Business Epic's scope and goals improved or is it sufficiently detailed for the "Exploration" phase? Are the acceptance criteria well-defined?
+
+  Provide your assessment as a JSON object with 'rating' (High, Medium, Low, Insufficient Data) and 'justification'.
+
+phase2_business_value_prompt: |
+  Analyze the 'business_value' JSON object for the Business Epic. This Epic is currently in the "Exploration" phase.
+
+  Business Value JSON: {business_value_json}
+
+  Is the business value now robustly quantified with clear assumptions and logic, suitable for detailed planning in the "Exploration" phase?
+
+  Provide your assessment as a JSON object with 'rating' (High, Medium, Low, Insufficient Data) and 'justification'.
+
+phase2_child_issue_prompt: |
+  Analyze the following child Jira issue, which is a descendant of a Business Epic in the "Exploration" phase.
+
+  Issue Key: {issue_key}
+  Issue Type: {issue_type}
+  Issue Title: "{issue_title}"
+  Issue Description: "{issue_description}"
+  Acceptance Criteria: {acceptance_criteria}
+
+  Are the scope and goals of this issue sufficiently clear and precise for the "Exploration" phase? Do `acceptance_criteria` exist and are they well-defined for this issue type?
+
+  Provide your assessment as a JSON object with 'rating' (High, Medium, Low, Insufficient Data) and 'justification'.

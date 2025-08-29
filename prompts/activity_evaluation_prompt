@@ -1,0 +1,74 @@
+Du machst als verantwortlicher Projektleiter für ein großes IT Projekt regelmäßige Reviews, um sicherzustellen, dass das Projekt auf einem guten Weg ist
+Einer der Schwerpunkte im Review ist die Analyse der Backlog-Refinement und Abarbeitung durch die Teams. Dabei achtest Du insbesondere auf folgende Aspekte
+
+1) Backlog-Abarbeitung ("abgeschlossene Issues")
+  - wie hoch ist die durchschnittliche Abarbeitung-Velocity der Teams in dem Projekt (Abarbeitung-Velocity = Anzahl abgeschlossener Stories je Monat)? Hat sich die Velocity in den letzten 2-3 Monaten deutlich verändert?
+  - arbeiten die Teams gleichmäßig an dem Backlog und haben nach der frühen Anlaufphase eine weitgehend stabile Velocity über die Projektlaufzeit?
+  - ist der Anteil der 'Langläufer' bei den Stories niedrig, ist also der Unterschied zwischen der durchschnittlichen Laufzeit und dem Median gering (= wenige Tage)?
+  - werden Bugs zügig gelöst, ist also die durchschnittliche Zeit zwischen Erstellung und Abschluss eines Bugs sehr kurz (= wenige Tage)
+  - ist der Anteil der Bugs an dem Backlog niedrig (<10%) oder ist das Auftreten von Bugs zummindest zeitlich eng eingeschränkt zB unmittelbar nach Deployment?
+
+2) Backlog-Refinement ("neu erstellte Issues")
+  - wie hoch ist die durchschnittliche Refinement-Velocity der Teams in dem Projekt (Refinement-Velocity = Anzahl neu erstellter Stories je Monat)
+  - wie hoch ist der aktuelle Refinement-Backlog also die Summe der Stories, die noch noch nicht abgeschlossen sind? Für wie viele Wochen reicht dieser Backlog bei der aktuellen Abarbeitungs-Velocity?
+  - schafft das Team in der frühen Projektphase mehr Stories zu refinen als abzuschließen und damit einen ausreichenden Backlog aufzubauen?
+  - ist das Refinement gut auf die Velocity abgestimmt, liegt also die durchschnittliche Zeit zwischen Erstellung der Story und Abschluss in der Größenordnung von ca 1-2 Monate?
+  - ist der Story Backlog angemessen groß, reicht also bei der aktuellen Velocity zumindest für die kommenden 4 Wochen?
+
+Fasse deine Analyse zu der aktuellen Projektsituation in einer kurzen, präzisen Einschätzung zusammen.
+Fokussiere dich dabei auf die wichtigsten Punkte. Du musst nicht vollständig alle Punkte abarbeiten! Nutze Bullet Points wenn sinnvoll
+
+Anbei die aktuelle Analyse der Activities zu Stories & Bugs:
+
+=== Monatlich neu erstellte Issues ===
+type           Bug  Story
+creation_date
+2023-12          0      5
+2024-01          0     12
+2024-02          0      6
+2024-03          1      8
+2024-04          0     20
+2024-05         11      9
+2024-06          7      4
+2024-07          0      3
+2024-08          0      7
+2024-09          0     15
+2024-10          2      4
+2024-11          1      4
+2024-12          0      4
+2025-01          0      4
+2025-02          0      5
+2025-03          0      6
+
+=== Monatlich abgeschlossene Issues ===
+type          Bug  Story
+closing_date
+2024-01         0      3
+2024-02         0      7
+2024-03         1     10
+2024-04         0     12
+2024-05         8     10
+2024-06        10     13
+2024-07         0      3
+2024-08         0      2
+2024-09         0      4
+2024-10         2      9
+2024-11         0      9
+2024-12         1      6
+2025-01         0      7
+2025-02         0      3
+2025-03         0     11
+2025-04         0      1
+
+=== Analyse der bereinigten Durchlaufzeiten (in Tagen) ===
+Hinweis: Issues mit negativer Laufzeit (Abschluss vor Epic-Zuordnung) wurden für diese Statistik entfernt.
+
+--- Stories ---
+Durchschnitt: 58.4 Tage
+Median:       35.0 Tage
+Schnellste:   0 Tage | Langsamste: 352 Tage
+
+--- Bugs ---
+Durchschnitt: 8.3 Tage
+Median:       5.0 Tage
+Schnellste:   0 Tage | Langsamste: 49 Tage

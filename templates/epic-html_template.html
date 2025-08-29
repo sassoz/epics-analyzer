@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEMABU-2067: Q2 2025 EOS Workflow: Voice, Inhouse und FTTH Auftragsnachverfolgung</title>
+    <link rel="icon" href="https://www.telekom.de/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        /* MODIFIED: Header styles are now split into a container and two boxes */
+        .header-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            align-items: stretch;
+        }
+
+        .title-box {
+            background-color: #E20074;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            flex-grow: 1;
+        }
+
+        .status-box {
+            background-color: #E20074;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        h2 {
+            color: #E20074;
+            border-bottom: 2px solid #E20074;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #333;
+            margin-top: 20px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .info-box {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .full-width-box {
+          flex-basis: 100%;
+        }
+        .feature-card {
+            background-color: #fff;
+            border-left: 4px solid #E20074;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .feature-card h3 {
+            margin-top: 0;
+            color: #E20074;
+        }
+        .timeline {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        .timeline-item {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .timeline-item:before {
+            content: "•";
+            color: #E20074;
+            font-size: 20px;
+            position: absolute;
+            left: 0;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .highlight {
+            background-color: #fffde7;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .jira-link {
+            color: #E20074;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .jira-link:hover {
+            text-decoration: underline;
+        }
+        .hierarchy-section {
+            margin-top: 10px;
+            /*border-top: 1px solid #ccc;*/
+            padding-top: 10px;
+        }
+        .hierarchy-image {
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+         /* Add any specific styles from other files if needed, ensure no conflicts */
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <div class="title-box">
+            <h1><a href="https://jira.telekom.de/browse/BEMABU-2067" class="jira-link" style="color: white; text-decoration: none;">BEMABU-2067</a>: Q2 2025 EOS Workflow: Voice, Inhouse und FTTH Auftragsnachverfolgung</h1>
+        </div>
+        <div class="status-box">
+            IN PROGRESS
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="info-box">
+             <h2>Gesamtziel</h2>
+             <p>Das Business Epic <a href="https://jira.telekom.de/browse/BEMABU-2067" class="jira-link">BEMABU-2067</a> zielt darauf ab, die Arbeitsabläufe in EOS für die Auftragsnachverfolgung von Voice, Inhouse und FTTH zu verbessern und zu automatisieren. Dadurch sollen Aufträge direkt in EOS bearbeitet und nachverfolgt werden, wodurch manuelle Bearbeitungen in den Produktionssystemen CRM-T, SeCe-IT und FTTH entfallen und ein schnellerer, effizienterer Service ermöglicht wird.</p>
+        </div>
+
+        <div class="info-box">
+            <h2>Einzelziele</h2>
+            <ul>
+                <li>Automatisierter Versand von Zwischeninformationen (z. B. FTTH Zwischeninfos) an Kunden basierend auf Ausbaustatus- und Plantermin-Daten.</li>
+                <li>Direkte Anzeige und Nachverfolgung des Lieferstatus von Endgeräten (Voice und Inhouse) in EOS.</li>
+                <li>Einführung neuer Schaltflächen („Teilauftrag nachverfolgen“) mit farblicher Unterscheidung (weiß vor Versand, magenta nach Versand) zur intuitiven Nutzung.</li>
+                <li>Verbesserte Zusammenarbeit zwischen EOS, CRM-T, SeCe-IT, FTTH, POT, Flamingo und O3 durch automatisierte Datenübernahme und Synchronisation.</li>
+                <li>Optimierung interner Arbeitsprozesse, Senkung von Aufwänden und Steigerung der Kundenzufriedenheit.</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Geschäftlicher Nutzen (Business Value)</h2>
+    <div class="container">
+        <div class="info-box">
+            <h3>Business Impact (Skala: 3)</h3>
+            <p>Kostenreduzierung durch optimierte Arbeit mit EOS</p>
+        </div>
+        <div class="info-box">
+            <h3>Strategic Enablement (Skala: 2)</h3>
+            <p>Schnellerer und besserer Serviceprozess durch direkte Bearbeitung in EOS statt manuell in verschiedenen Produktionsstraßen</p>
+        </div>
+        <div class="info-box">
+            <h3>Time Criticality (Skala: 2)</h3>
+            <p>Täglich relevant für MitarbeiterInnen aus SGrK</p>
+        </div>
+    </div>
+
+    <h2>Schlüsselfunktionen und angeforderte Funktionalitäten</h2>
+    <div class="feature-card">
+        <h3>Automatischer Versand von FTTH-Zwischeninfos (<a href="https://jira.telekom.de/browse/MAGBUS-102857" class="jira-link">MAGBUS-102857</a>)</h3>
+        <ul>
+            <li>Automatischer Versand von Statusupdates an Kunden basierend auf Ausbaustatus und Plantermin</li>
+            <li>Konfigurierbare Intervalle für verschiedene Status (z.B. alle 90 Tage für "VVM ongoing")</li>
+            <li>Neue Korrespondenztypen für GGS-Zwischeninfos</li>
+        </ul>
+    </div>
+    <div class="feature-card">
+        <h3>Sendungsverfolgung für Voice und Inhouse (<a href="https://jira.telekom.de/browse/MAGBUS-84364" class="jira-link">MAGBUS-84364</a>)</h3>
+        <ul>
+            <li>Anzeige des Lieferstatus versendeter Endgeräte in EOS</li>
+            <li>Embedded Links für Sendungsverfolgung (DHL/DPD)</li>
+            <li>Visualisierung des Sendeerfolgs mit Status-Icons</li>
+        </ul>
+    </div>
+    <div class="feature-card">
+        <h3>Inhouse Auftragsabschluss (<a href="https://jira.telekom.de/browse/MAGBUS-84681" class="jira-link">MAGBUS-84681</a>)</h3>
+        <ul>
+            <li>Neuer Button "Teilauftrag nachverfolgen" mit statusabhängiger Darstellung</li>
+            <li>Lesender Zugriff auch für Nicht-Bearbeiter</li>
+            <li>Integration mit Fakturierungsprozess</li>
+        </ul>
+    </div>
+    <div class="feature-card">
+        <h3>FTTH Nachbesserungen (<a href="https://jira.telekom.de/browse/MAGBUS-97682" class="jira-link">MAGBUS-97682</a>)</h3>
+        <ul>
+            <li>Verbesserte Datenqualität für Eigentümerkontakte (NE3)</li>
+            <li>Pflichtfelder für Kundenansprechpartner (NE4) in Flamingo</li>
+            <li>Erweiterte Anzeige von Firmeninformationen in EOS</li>
+        </ul>
+    </div>
+    <div class="feature-card">
+        <h3>FTTH Auftragsnachverfolgung (<a href="https://jira.telekom.de/browse/MAGBUS-99313" class="jira-link">MAGBUS-99313</a>)</h3>
+        <ul>
+            <li>Neue Tracking-Seite für GGS-Teilaufträge</li>
+            <li>Anzeige von FOL-ID neben KLS-ID</li>
+            <li>Statusabhängige Button-Farbgebung (Magenta/Weiß)</li>
+        </ul>
+    </div>
+
+    <h2>Größe & Komplexität</h2>
+    <div class="container">
+        <div class="info-box">
+          <p>Jira Issues <strong>Gesamt</strong>: 110</p>
+          <p> - davon <strong>Epics</strong>: 16</p>
+          <p> - davon <strong>Stories</strong>: 88</p>
+          <p></p>
+          <p>Beteiligte IT-Bereiche: 3</p>
+          <p>- 91 Issues: API Decoupling Layer Standard Business</p>
+          <p>- 15 Issues: Eine Oberfläche Service</p>
+          <p>-  2 Issues: Magenta Business</p>
+        </div>
+        <div class="info-box">
+          <p>Das Projekt ist mit einer Größe von 16 Epics und 88 Stories extrem groß.</p>
+          <p>Mit 3 beteiligten IT Bereichen und einem sehr klaren Tätigkeitsschwerpunkt im Bereich "API Decoupling Layer Standard Business" hat das Projekt eine vergleichsweise geringe Steuerungskomplexität</p>
+        </div>
+    </div>
+
+    <h2>Zeitplan, Workflow, Time Creep</h2>
+    <div class="container">
+        <div class="info-box">
+            <ul>
+                <li><strong>Target Start:</strong> April 2025</p>
+                <li><strong>Target End:</strong> Juni 2025</p>
+                <li><strong>Fix Versions:</strong> Q2_25, PrioQ2_25</p>
+            </ul>
+        </div>
+        <div class="info-box">
+            <ul>
+                <li><strong>FUNNEL :</strong> 3 Monate, 7 Tage</p>
+                <li><strong>ANALYSIS :</strong> 26 Tage</p>
+                <li><strong>IN PROGRESS :</strong> 3 Monate, 10 Tage</p>
+                <li><strong>CODING TIME :</strong> 9 Monate, 22 Tage</p>
+            </ul>
+        </div>
+        <div class="info-box full-width-box">
+          <p><strong>Verschiebungen der Delivery Milestones</strong></p>
+              <ul>
+                <li>EOS-6668: erfuhr eine große Terminverschiebung von ca. 5 Monaten (von 2024-07-03 auf 2024-12-18) und eine weitere von ca. 3 Monaten (von 2024-12-18 auf 2025-03-13). Zusätzlich kam eine moderate Verschiebung von ca. 1,5 Monaten (von 2025-03-13 auf 2025-04-24) hinzu.</p>
+                <li>MAGBUS-97682: erfuhr eine Verschiebung von ca. 3 Monaten (von 2025-04-03 auf 2025-06-26)</p>
+                <li>MAGBUS-99313: erfuhr eine erhebliche Terminänderung von ca. 6 Monaten (von 2025-06-26 auf 2026-01-04)</p
+            </ul>
+        </div>
+    </div>
+
+    <div class="hierarchy-section">
+        <h2>Backlog</h2>
+        <img src="BEMABU-2067_backlog_development.png" alt="BEMABU-2067 Backlog Übersicht" class="hierarchy-image">
+    </div>
+
+    <div class="hierarchy-section">
+        <h2>Jira Hierarchie</h2>
+        <img src="BEMABU-2067_issue_tree.png" alt="BEMABU-2067 Jira Hierarchy: Q2 2025 EOS Workflow: Voice, Inhouse und FTTH Auftragsnachverfolgung" class="hierarchy-image">
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+# prompts/comparison_prompt.yaml
+comparison_prompt_template: |
+  Du bist ein Qualitäts-Analyst für Datenextraktion. Deine Aufgabe ist es, die Ergebnisse von zwei verschiedenen Versionen eines Datenextraktionsprozesses zu vergleichen.
+
+  Beide Versionen greifen als Faktengrundlage auf die folgende fachliche Beschreibung zurück:
+  ```text
+  {description}
+  
+  "Version Alt" ist das Ergebnis eines älteren Prozesses. "Version Neu" ist das Ergebnis eines verbesserten, KI-gesteuerten Prozesses.
+  Bewerte die Unterschiede objektiv und fasse die Änderungen zusammen.
+
+  Version Alt (aus dem ursprünglichen Jira-Ticket):
+  ```json
+  {old_business_value}
+
+  Version Neu (durch neue KI-Extraktion erzeugt):
+  ```json
+  {new_business_value}
+
+  Analyse-Aufgaben:
+  Verlustanalyse: Wurden wichtige, konkrete Informationen (Zahlen, spezifische Begründungen) aus "Version Alt" in "Version Neu" ausgelassen? Prüfe gegen die fachliche Beschreibung, ob der Verlust gerechtfertigt ist (weil die Info gar nicht im Originaltext stand).
+  Gewinnanalyse: Wurden in "Version Neu" neue, relevante Informationen aus der fachlichen Beschreibung extrahiert, die in "Version Alt" fehlten oder unstrukturiert waren?
+  Qualitätsbewertung: Ist "Version Neu" eine qualitative Verbesserung (z.B. präziser, besser strukturiert, weniger Fülltext)?
+
+  Bitte gib deine Bewertung ausschließlich im folgenden JSON-Format zurück:
+  ```json
+  {{
+    "assessment_summary": "Eine prägnante Zusammenfassung der Änderung in einem Satz.",
+    "information_gained": [
+      "Eine Liste der wichtigsten neuen Informationen, die in 'Version Neu' gefunden wurden."
+    ],
+    "information_lost": [
+      "Eine Liste der wichtigsten Informationen, die in 'Version Alt' vorhanden waren, aber in 'Version Neu' fehlen."
+    ],
+    "quality_assessment": "Eine qualitative Bewertung wie 'Deutliche Verbesserung', 'Leichte Verbesserung', 'Keine wesentliche Änderung' oder 'Verschlechterung'."
+  }}
