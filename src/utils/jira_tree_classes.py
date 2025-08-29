@@ -1,12 +1,10 @@
 # src/utils/jira_tree_classes.py
-# src/utils/jira_tree_classes.py
 """
-Modul zum Erstellen, Visualisieren und Verarbeiten von JIRA-Issue-Beziehungsbäumen.
+Module for creating, visualizing, and processing JIRA issue relationship trees.
 
-Dieses Modul bietet die Funktionalität, JIRA-Issue-Bäume basierend auf einer
-flexibel konfigurierbaren Hierarchie von Issue-Verknüpfungen zu erstellen,
-diese grafisch darzustellen und strukturierte Kontext-Zusammenfassungen für
-die Weiterverarbeitung zu generieren.
+This module provides the functionality to create JIRA issue trees based on a
+flexibly configurable hierarchy of issue links, to visualize them graphically,
+and to generate structured context summaries for further processing.
 """
 
 import json
@@ -24,68 +22,68 @@ from utils.config import (
     JSON_SUMMARY_DIR,
     LOGS_DIR,
     JIRA_TREE_MANAGEMENT,
-    ISSUE_LOG_FILE # <-- NEUER IMPORT
+    ISSUE_LOG_FILE # <-- NEW IMPORT
 )
 
 
 class JiraTreeGenerator:
     """
-    Erstellt einen Graphen von JIRA-Issues basierend auf einer flexiblen Hierarchie.
+    Creates a graph of JIRA issues based on a flexible hierarchy.
 
-    Diese Klasse durchsucht JSON-Dateien von JIRA-Issues und baut einen gerichteten
-    Graphen (einen Baum), der die Beziehungen zwischen den Issues darstellt. Die Art
-    der zu verfolgenden Beziehungen ist flexibel konfigurierbar.
+    This class searches JSON files of JIRA issues and builds a directed
+    graph (a tree) representing the relationships between the issues. The type
+    of relationships to follow is flexibly configurable.
     """
     def __init__(self, json_dir=JIRA_ISSUES_DIR, allowed_types=None):
         """
-        Initialisiert den JiraTreeGenerator.
+        Initializes the JiraTreeGenerator.
 
-        Diese Klasse kann so konfiguriert werden, dass sie verschiedene Hierarchie-Typen
-        verwendet. Wenn keine Konfiguration (`allowed_types`) übergeben wird, greift sie
-        auf die Standardkonfiguration `JIRA_TREE_MANAGEMENT` zurück.
+        This class can be configured to use different hierarchy types.
+        If no configuration (`allowed_types`) is passed, it falls back
+        to the default configuration `JIRA_TREE_MANAGEMENT`.
 
         Args:
-            json_dir (str): Das Verzeichnis, das die JIRA-Issue-JSON-Dateien enthält.
-            allowed_types (dict, optional): Ein Dictionary, das einem Issue-Typ (str) eine
-                                            Liste von erlaubten Beziehungs-Typen (str)
-                                            zuordnet. Z.B. {'Epic': ['realized_by'], ...}.
-                                            Wenn None, wird der Standard aus der config verwendet.
+            json_dir (str): The directory containing the JIRA issue JSON files.
+            allowed_types (dict, optional): A dictionary that maps an issue type (str) to a
+                                            list of allowed relationship types (str).
+                                            E.g., {'Epic': ['realized_by'], ...}.
+                                            If None, the default from the config is used.
         """
         self.json_dir = json_dir
-        # Verwende die übergebene Konfiguration, oder greife auf den Standard zurück
+        # Use the passed configuration, or fall back to the default
         self.allowed_hierarchy_types = allowed_types if allowed_types is not None else JIRA_TREE_MANAGEMENT
 
-    # +++ NEUE METHODE zum Protokollieren fehlender Issues +++
+    # +++ NEW METHOD for logging missing issues +++
     def _log_missing_issue(self, issue_key: str):
         """
-        Protokolliert einen fehlenden Issue-Key in der zentralen Log-Datei.
-        Verhindert doppelte Einträge, um die Datei sauber zu halten.
+        Logs a missing issue key in the central log file.
+        Prevents duplicate entries to keep the file clean.
         """
         try:
             existing_keys = set()
-            # Prüfen, ob die Log-Datei bereits existiert und Einträge hat
+            # Check if the log file already exists and has entries
             if os.path.exists(ISSUE_LOG_FILE):
                 with open(ISSUE_LOG_FILE, 'r', encoding='utf-8') as f:
                     existing_keys = {line.strip() for line in f}
 
-            # Nur schreiben, wenn der Key noch nicht in der Datei ist
+            # Only write if the key is not already in the file
             if issue_key not in existing_keys:
                 with open(ISSUE_LOG_FILE, 'a', encoding='utf-8') as f:
                     f.write(f"{issue_key}\n")
-                logger.info(f"Fehlender Key '{issue_key}' wurde zur Nachverfolgung in {ISSUE_LOG_FILE} hinzugefügt.")
+                logger.info(f"Missing key '{issue_key}' was added for tracking in {ISSUE_LOG_FILE}.")
         except Exception as e:
-            logger.error(f"Fehler beim Schreiben des fehlenden Keys '{issue_key}' in die Log-Datei: {e}")
+            logger.error(f"Error writing missing key '{issue_key}' to the log file: {e}")
 
 
     def read_jira_issue(self, file_path):
         """
-        Liest einen JIRA-Issue aus einer JSON-Datei.
+        Reads a JIRA issue from a JSON file.
 
         Args:
-            file_path (str): Der Pfad zur JSON-Datei.
+            file_path (str): The path to the JSON file.
 
         Returns:
-            dict or None: Ein Dictionary mit den Issue-Daten oder None bei einem Fehler.
+            dict or None: A dictionary with the issue data or None in case of an error.
         """
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -99,18 +97,18 @@ class JiraTreeGenerator:
 
     def find_json_for_key(self, key):
         """
-        Findet die passende JSON-Datei für einen bestimmten JIRA-Key.
+        Finds the corresponding JSON file for a given JIRA key.
 
-        Durchsucht das angegebene Verzeichnis nach einer Datei, die dem Key entspricht.
-        Prüft zuerst auf einen exakten Dateinamen-Match (z.B. 'PROJ-123.json') und
-        durchsucht andernfalls den Inhalt der Dateien.
+        Searches the specified directory for a file that matches the key.
+        First checks for an exact filename match (e.g., 'PROJ-123.json') and
+        otherwise searches the content of the files.
 
         Args:
-            key (str): Der JIRA-Key (z.B. "PROJ-123").
+            key (str): The JIRA key (e.g., "PROJ-123").
 
         Returns:
-            str or None: Der Dateipfad zur gefundenen JSON-Datei oder None, wenn nichts
-                         gefunden wurde.
+            str or None: The file path to the found JSON file or None if nothing
+                         was found.
         """
         exact_path = os.path.join(self.json_dir, f"{key}.json")
         if os.path.exists(exact_path):
@@ -128,31 +126,31 @@ class JiraTreeGenerator:
 
     def build_issue_tree(self, root_key, include_rejected=False):
         """
-        Baut einen gerichteten Graphen basierend auf einer flexiblen Hierarchie-Konfiguration.
+        Builds a directed graph based on a flexible hierarchy configuration.
 
-        Beginnend mit einem Wurzel-Issue wird der Baum rekursiv aufgebaut, indem die
-        Verknüpfungen (`issue_links`) verfolgt werden. Welche Verknüpfungen berücksichtigt
-        werden, hängt von der Konfiguration (`self.allowed_hierarchy_types`) ab, die den
-        Eltern-Issue-Typ auf eine Liste gültiger Beziehungs-Typen abbildet.
+        Starting with a root issue, the tree is built recursively by
+        following the links (`issue_links`). Which links are considered
+        depends on the configuration (`self.allowed_hierarchy_types`), which maps the
+        parent issue type to a list of valid relationship types.
 
         Args:
-            root_key (str): Der Schlüssel des Wurzel-Issues (z.B. "PROJ-1").
-            include_rejected (bool, optional): Wenn False, werden Issues mit der Resolution
-                                               'Rejected' oder 'Withdrawn' (und deren
-                                               gesamte untergeordnete Zweige) ausgeschlossen.
-                                               Standard ist False.
+            root_key (str): The key of the root issue (e.g., "PROJ-1").
+            include_rejected (bool, optional): If False, issues with the resolution
+                                               'Rejected' or 'Withdrawn' (and their
+                                               entire subordinate branches) are excluded.
+                                               Default is False.
 
         Returns:
-            nx.DiGraph or None: Ein gerichteter Graph, der die gefilterte Baumstruktur
-                                darstellt, oder None, wenn ein Fehler auftritt (z.B.
-                                Wurzel-Issue nicht gefunden).
+            nx.DiGraph or None: A directed graph representing the filtered tree structure,
+                                or None if an error occurs (e.g.,
+                                root issue not found).
         """
         logger.info(f"Building issue tree for root issue: {root_key}")
         G = nx.DiGraph()
         file_path = self.find_json_for_key(root_key)
         if not file_path:
             logger.error(f"Error: No JSON file found for root key {root_key}")
-            self._log_missing_issue(root_key) # Auch der Root-Key könnte fehlen
+            self._log_missing_issue(root_key) # The root key could also be missing
             return None
 
         root_data = self.read_jira_issue(file_path)
@@ -166,7 +164,7 @@ class JiraTreeGenerator:
                          f"which is not a valid starting point in the hierarchy configuration.")
             return None
 
-        # Prüft auf eine Liste von auszuschließenden Resolution-Typen
+        # Checks for a list of resolution types to exclude
         resolutions_to_skip = ['Rejected', 'Withdrawn']
         root_resolution = root_data.get('resolution')
         if not include_rejected and root_resolution in resolutions_to_skip:
@@ -177,7 +175,7 @@ class JiraTreeGenerator:
         visited = set()
 
         def _add_children(parent_key):
-            """Rekursive Hilfsfunktion, die generisch nach Kindern sucht."""
+            """Recursive helper function that generically searches for children."""
             if parent_key in visited:
                 return
             visited.add(parent_key)
@@ -201,7 +199,7 @@ class JiraTreeGenerator:
                     child_file_path = self.find_json_for_key(child_key)
                     if not child_file_path:
                         logger.warning(f"Skipping child {child_key}: JSON file not found.")
-                        self._log_missing_issue(child_key) # <-- HIER WIRD DIE NEUE METHODE AUFGERUFEN
+                        self._log_missing_issue(child_key) # <-- THE NEW METHOD IS CALLED HERE
                         continue
 
                     child_data = self.read_jira_issue(child_file_path)
@@ -209,7 +207,7 @@ class JiraTreeGenerator:
                         logger.warning(f"Skipping child {child_key}: JSON file could not be read.")
                         continue
 
-                    # Prüft auf eine Liste von auszuschließenden Resolution-Typen
+                    # Checks for a list of resolution types to exclude
                     child_resolution = child_data.get('resolution')
                     if not include_rejected and child_resolution in resolutions_to_skip:
                         logger.info(f"Skipping child {child_key} because its resolution is '{child_resolution}'.")
@@ -229,47 +227,47 @@ class JiraTreeGenerator:
 
 class JiraTreeVisualizer:
     """
-    Klasse zur Visualisierung eines JIRA-Issue-Baum-Graphen.
+    Class for visualizing a JIRA issue tree graph.
 
-    Nimmt einen `networkx.DiGraph` entgegen und erstellt eine grafische Darstellung,
-    die als Bilddatei gespeichert wird. Die Knoten werden nach ihrem Status eingefärbt.
+    Takes a `networkx.DiGraph` and creates a graphical representation
+    that is saved as an image file. The nodes are colored according to their status.
     """
     def __init__(self, output_dir=ISSUE_TREES_DIR, format='png'):
         """
-        Initialisiert den Visualizer.
+        Initializes the visualizer.
 
         Args:
-            output_dir (str): Das Verzeichnis zum Speichern der erstellten Bilder.
-            format (str): Das Dateiformat für die Ausgabe (z.B. 'png', 'svg').
+            output_dir (str): The directory to save the created images.
+            format (str): The file format for the output (e.g., 'png', 'svg').
         """
         self.output_dir = output_dir
         self.format = format
         self.status_colors = {'Funnel': 'lightgray', 'Backlog for Analysis': 'lightgray', 'Analysis': 'lemonchiffon', 'Backlog': 'lemonchiffon', 'Review': 'lemonchiffon', 'Waiting': 'lightblue', 'In Progress': 'lightgreen', 'Deployment': 'lightgreen', 'Validation': 'lightgreen', 'Resolved': 'green', 'Closed': 'green'}
 
     def _determine_node_size_and_font(self, G):
-        """Bestimmt dynamisch die Größe der Knoten und Schrift basierend auf der Knotenanzahl."""
+        """Dynamically determines the size of nodes and font based on the number of nodes."""
         if G.number_of_nodes() > 20: return 2000, 8, (20, 12)
         elif G.number_of_nodes() > 10: return 3000, 8, (16, 12)
         else: return 4000, 9, (12, 12)
 
     def visualize(self, G, root_key, output_file=None):
         """
-        Erstellt und speichert eine Visualisierung des Graphen.
+        Creates and saves a visualization of the graph.
 
-        Der Graph wird mit einem hierarchischen Layout (dot) dargestellt. Die Knoten-
-        beschriftungen enthalten den Key und die Fix-Version(en). Eine Legende erklärt
-        die Farbkodierung der Status.
+        The graph is displayed with a hierarchical layout (dot). The node
+        labels contain the key and the fix version(s). A legend explains
+        the color coding of the statuses.
 
         Args:
-            G (nx.DiGraph): Der zu visualisierende Graph.
-            root_key (str): Der Schlüssel des Wurzel-Issues, wird für den Dateinamen
-                            und Titel verwendet.
-            output_file (str, optional): Der vollständige Pfad zur Ausgabedatei.
-                                         Wenn nicht angegeben, wird ein Standardname
-                                         im `output_dir` generiert.
+            G (nx.DiGraph): The graph to be visualized.
+            root_key (str): The key of the root issue, used for the filename
+                            and title.
+            output_file (str, optional): The full path to the output file.
+                                         If not specified, a default name
+                                         is generated in the `output_dir`.
 
         Returns:
-            bool: True, wenn die Visualisierung erfolgreich gespeichert wurde, sonst False.
+            bool: True if the visualization was successfully saved, otherwise False.
         """
         if G is None or not isinstance(G, nx.DiGraph) or G.number_of_nodes() <= 1:
             if G is None or not isinstance(G, nx.DiGraph): logger.error("Error: Invalid graph provided.")
@@ -320,40 +318,40 @@ class JiraTreeVisualizer:
 
 class JiraContextGenerator:
     """
-    Erstellt strukturierte Kontextdaten aus JIRA-Issue-Bäumen für die KI-Verarbeitung.
+    Creates structured context data from JIRA issue trees for AI processing.
 
-    Diese Klasse wandelt einen `networkx.DiGraph` in ein strukturiertes JSON-Format um.
-    Das JSON enthält eine Liste aller Issues im Baum (in BFS-Reihenfolge), angereichert
-    mit wichtigen Feldern und Beziehungs-Informationen (Eltern/Kinder).
+    This class converts a `networkx.DiGraph` into a structured JSON format.
+    The JSON contains a list of all issues in the tree (in BFS order), enriched
+    with important fields and relationship information (parents/children).
     """
     def __init__(self, output_dir=JSON_SUMMARY_DIR):
         """
-        Initialisiert den Kontext-Generator.
+        Initializes the context generator.
 
         Args:
-            output_dir (str): Das Verzeichnis zum Speichern der erstellten
-                              JSON-Zusammenfassungen. (Hinweis: Aktuell wird die
-                              Ausgabe in LOGS_DIR gespeichert, nicht hier.)
+            output_dir (str): The directory for saving the created
+                              JSON summaries. (Note: Currently, the
+                              output is saved in LOGS_DIR, not here.)
         """
         self.output_dir = output_dir
 
     def generate_context(self, G, root_key, output_file=None):
         """
-        Generiert eine JSON-formatierte Zeichenkette und speichert sie in einer Datei.
+        Generates a JSON-formatted string and saves it to a file.
 
-        Durchläuft den Graphen in einer Breadth-First-Search (BFS)-Reihenfolge,
-        beginnend beim `root_key`. Für jeden Knoten werden relevante Attribute extrahiert
-        und in eine strukturierte Form gebracht.
+        Traverses the graph in a Breadth-First-Search (BFS) order,
+        starting from the `root_key`. For each node, relevant attributes are extracted
+        and brought into a structured form.
 
         Args:
-            G (nx.DiGraph): Der Graph, aus dem der Kontext generiert werden soll.
-            root_key (str): Der Schlüssel des Wurzel-Issues.
-            output_file (str, optional): Der Pfad zur Speicherdatei. Wenn nicht angegeben,
-                                         wird ein Standardpfad im LOGS_DIR verwendet.
+            G (nx.DiGraph): The graph from which the context is to be generated.
+            root_key (str): The key of the root issue.
+            output_file (str, optional): The path to the save file. If not specified,
+                                         a default path in LOGS_DIR is used.
 
         Returns:
-            str: Eine JSON-formatierte Zeichenkette, die den Kontext darstellt.
-                 Gibt bei einem Fehler einen leeren JSON-String "{}" zurück.
+            str: A JSON-formatted string representing the context.
+                 Returns an empty JSON string "{}" in case of an error.
         """
         if G is None or not isinstance(G, nx.DiGraph):
             logger.error("Error: Invalid graph provided.")
@@ -367,7 +365,7 @@ class JiraContextGenerator:
             node_attrs = G.nodes[node]
             issue_data = {"key": node, "title": node_attrs.get('title', 'No title'), "issue_type": node_attrs.get('issue_type', 'Unknown'), "status": node_attrs.get('status', 'Unknown')}
 
-            # Optionale Felder hinzufügen
+            # Add optional fields
             for field in ['assignee', 'priority', 'target_start', 'target_end', 'description']:
                 if value := node_attrs.get(field): issue_data[field] = value
 
@@ -380,11 +378,11 @@ class JiraContextGenerator:
             if acceptance_criteria := node_attrs.get('acceptance_criteria', []):
                 issue_data["acceptance_criteria"] = acceptance_criteria if isinstance(acceptance_criteria, list) else [acceptance_criteria]
 
-            # Verwendet die im Graphen vorhandenen Kanten, um realisierte Kinder zu finden
+            # Uses the edges present in the graph to find realized children
             if realized_by_keys := list(G.successors(node)):
                 issue_data["realized_by"] = [{"key": child_key, "title": G.nodes[child_key].get('title', 'No title')} for child_key in realized_by_keys]
 
-            # Verwendet die im Graphen vorhandenen Kanten, um realisierte Eltern zu finden
+            # Uses the edges present in the graph to find realized parents
             if predecessors := list(G.predecessors(node)):
                 issue_data["realizes"] = [{"key": parent, "title": G.nodes[parent].get('title', 'No title')} for parent in predecessors]
 
@@ -393,8 +391,8 @@ class JiraContextGenerator:
         context_json = {"root": root_key, "issues": issues_data}
         json_str = json.dumps(context_json, indent=2, ensure_ascii=False)
 
-        # Logik zur Dateispeicherung
-        # Hinweis: Das `output_file` Argument überschreibt den Standardpfad.
+        # Logic for file saving
+        # Note: The `output_file` argument overrides the default path.
         #if output_file is None:
         #    context_file = os.path.join(LOGS_DIR, f"{root_key}_context.json")
         #else:
