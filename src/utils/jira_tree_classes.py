@@ -2,11 +2,14 @@
 import networkx as nx
 from tqdm import tqdm
 import logging
+import os
+import json
+import matplotlib.pyplot as plt
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-class JiraTreeBuilder:
+class JiraTreeGenerator:
     def __init__(self, jira_client, project_data_provider, verbose=False):
         self.jira_client = jira_client
         self.issue_details = project_data_provider.issue_details
@@ -122,3 +125,35 @@ class JiraTreeBuilder:
         self.project_data_provider.find_and_set_root_node()
 
         return self.issue_tree
+
+class JiraTreeVisualizer:
+    def __init__(self, format='png'):
+        self.format = format
+
+    def visualize(self, issue_tree, epic_id):
+        if not issue_tree.nodes():
+            logger.warning("Issue tree is empty, visualization will be skipped.")
+            return
+
+        plt.figure(figsize=(20, 15))
+        pos = nx.nx_agraph.graphviz_layout(issue_tree, prog="dot")
+        
+        nx.draw(issue_tree, pos, with_labels=True, node_size=3000, node_color="skyblue", font_size=10, font_weight="bold")
+        
+        # Save the visualization
+        output_dir = os.path.join("templates", f"{epic_id}_issue_tree.{self.format}")
+        os.makedirs(os.path.dirname(output_dir), exist_ok=True)
+        plt.savefig(output_dir)
+        plt.close() # Close the figure to free up memory
+        logger.info(f"Issue tree visualization saved to {output_dir}")
+
+class JiraContextGenerator:
+    def generate_context(self, issue_tree, epic_id):
+        if not issue_tree or not epic_id in issue_tree:
+            logger.warning(f"Cannot generate context. Epic ID '{epic_id}' not found in the tree or tree is empty.")
+            return "{}" # Return an empty JSON object as a string
+
+        # Create a serializable representation of the tree
+        tree_data = nx.tree_data(issue_tree, root=epic_id)
+        return json.dumps(tree_data, indent=2)
+
