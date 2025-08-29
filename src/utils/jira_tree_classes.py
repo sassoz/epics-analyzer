@@ -283,7 +283,14 @@ class JiraTreeVisualizer:
             os.makedirs(self.output_dir, exist_ok=True)
             output_file = os.path.join(self.output_dir, f"{root_key}_issue_tree.{self.format}")
 
-        pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
+        try:
+            # Try to use the hierarchical layout first (requires pygraphviz)
+            pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
+        except ImportError:
+            # Fallback to a simpler layout if pygraphviz is not installed
+            logger.warning("pygraphviz not found. Falling back to a simpler graph layout. For a hierarchical view, please install pygraphviz.")
+            pos = nx.spring_layout(G)
+
         NODE_SIZE, FONT_SIZE, figure_size = self._determine_node_size_and_font(G)
         plt.figure(figsize=figure_size)
 
