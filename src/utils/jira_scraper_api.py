@@ -79,7 +79,7 @@ class JiraScraper:
             "url": f'{self.client.browse}/{issue["key"]}',
             "summary": f.get("summary"),
             "description": f.get("description"),
-            "issuetype": issuetype.get("name"),
+            "issue_type": issuetype.get("name"),
             "status": status.get("name"),
             "assignee": (assignee or {}).get("displayName"),
             "duedate": f.get("duedate"),
@@ -120,7 +120,7 @@ class JiraScraper:
                     "link_type": t.get("name"),
                     "direction": "outward",
                     "key": k,
-                    "url": f"{self.client.browse}/{k}"
+                    "url": f'{self.client.browse}/{k}"
                 })
             if "inwardIssue" in link:
                 k = link["inwardIssue"]["key"]
@@ -129,7 +129,7 @@ class JiraScraper:
                     "link_type": t.get("name"),
                     "direction": "inward",
                     "key": k,
-                    "url": f"{self.client.browse}/{k}"
+                    "url": f'{self.client.browse}/{k}"
                 })
 
         # issues in epic (downstream) if this is an Epic
@@ -157,7 +157,7 @@ class JiraScraper:
                 data["issue_links"].append({
                     "relation_type": "issue_in_epic",
                     "key": k,
-                    "url": f"{self.client.browse}/{k}"
+                    "url": f'{self.client.browse}/{k}"
                 })
 
         return data
@@ -202,8 +202,8 @@ class JiraScraper:
             data = self._normalize_issue(raw)
 
             # --- NEW: Validate data before saving ---
-            if not data.get("issuetype") or not data.get("summary"):
-                logger.error(f"Validation failed for {issue_key}: 'issuetype' or 'summary' is missing. Skipping file write.")
+            if not data.get("issue_type") or not data.get("summary"):
+                logger.error(f"Validation failed for {issue_key}: 'issue_type' or 'summary' is missing. Skipping file write.")
                 self.issues_to_retry[issue_key] = issue_url
                 return None
 
