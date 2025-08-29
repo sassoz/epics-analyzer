@@ -137,15 +137,13 @@ class JiraScraper:
             children = []
             # Prefer modern JQL first
             try:
-                children += self.client.search(f'parentEpic = "{issue["key"]}"',
-                                               fields="summary,status,assignee,issuetype")
+                children += self.client.search(f'parent = "{issue["key"]}"', fields="summary,status,assignee,issuetype")
             except Exception:
                 pass
             # Fallback if parentEpic not supported
             if not children and self.cf_epic_link:
                 try:
-                    children += self.client.search(f'"{self.cf_epic_link}" = "{issue["key"]}"',
-                                                   fields="summary,status,assignee,issuetype")
+                    children += self.client.search(f'"{self.cf_epic_link}" = "{issue["key"]}"', fields="summary,status,assignee,issuetype")
                 except Exception:
                     pass
 
@@ -259,7 +257,7 @@ class JiraScraper:
 
             # enqueue its links
             for rel in child.get("issue_links", []) or []:
-                # --- MODIFIED: Only follow whitelisted link types ---
+                # --- MODified: Only follow whitelisted link types ---
                 if rel.get("relation_type") not in JIRA_LINK_TYPES_TO_FOLLOW:
                     continue
 
