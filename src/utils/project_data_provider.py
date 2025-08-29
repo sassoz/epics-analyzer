@@ -11,11 +11,11 @@ class ProjectDataProvider:
     Lädt, verarbeitet und stellt alle notwendigen Projektdaten für Analysen bereit.
     Diese Klasse dient als zentraler und effizienter Daten-Hub.
     """
-    def __init__(self, epic_id: str, json_dir: str = JIRA_ISSUES_DIR, hierarchy_config: dict = None):
+    def __init__(self, epic_id: str, json_dir: str = JIRA_ISSUES_DIR, hierarchy_config: dict = None, verbose: bool = False):
         self.epic_id = epic_id
         self.json_dir = json_dir
         # Der Generator wird jetzt mit der übergebenen Konfiguration initialisiert
-        self.tree_generator = JiraTreeGenerator(json_dir=self.json_dir, allowed_types=hierarchy_config)
+        self.tree_generator = JiraTreeGenerator(json_dir=self.json_dir, allowed_types=hierarchy_config, verbose=verbose)
 
         # Lade alle Kerndaten
         self.issue_tree = self.tree_generator.build_issue_tree(self.epic_id, include_rejected=False)
