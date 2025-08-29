@@ -1,26 +1,34 @@
+#######################################
+#        GENERATED FILES              #
+#######################################
 
-# # # # # # # # # # # # # # # # # # # #
-#        GENERIERTE DATEIEN         #
-# # # # # # # # # # # # # # # # # # # #
-
-# Ignoriere das gesamte Datenverzeichnis, da es nur generierte Ausgaben enthält
-# (HTML-Berichte, JSON-Zusammenfassungen, Bilder, etc.)
+# Ignore the entire data directory, since it only contains generated outputs
+# (HTML reports, JSON summaries, images, etc.)
 /data/
 
-# Ignoriere das Log-Verzeichnis
+# Ignore the logs directory
 /logs/
 
-# Ignoriere Alte Dateiversionen
+# Ignore old file versions
 /_Alte Versionen/
 
-# # # # # # # # # # # # # # # # # # # #
-#        ABHÄNGIGKEITEN & UMGEBUNG     #
-# # # # # # # # # # # # # # # # # # # #
+# Ignore generated plots
+/plots/
 
-# Ignoriere die Datei mit den Umgebungsvariablen, da sie sensible Schlüssel enthält
+# Ignore generated HTML reports
+/html_reports/
+
+# Ignore raw Jira issue JSONs
+/jira_issues/
+
+#######################################
+#        DEPENDENCIES & ENVIRONMENT   #
+#######################################
+
+# Ignore the environment variables file, since it contains sensitive keys
 .env
 
-# Ignoriere virtuelle Umgebungen von Python
+# Ignore Python virtual environments
 /venv/
 /.venv/
 /env/
@@ -28,35 +36,12 @@
 /env.bak/
 /venv.bak/
 
+#######################################
+#       PYTHON CACHE & ARTIFACTS      #
+#######################################
 
-# # # # # # # # # # # # # # # # # # # #
-#       PYTHON CACHE & ARTEFAKTE      #
-# # # # # # # # # # # # # # # # # # # #
-
-# Python Cache
+# Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-
-# # # # # # # # # # # # # # # # # # # #
-#      BETRIEBSSYSTEM-DATEIEN       #
-# # # # # # # # # # # # # # # # # # # #
-
-# Ignoriere Metadaten-Dateien von macOS
-.DS_Store
-
-# # # # # # # # # # # # # # # # # # # #
-#         BENUTZERDEFINIERTE DATEIEN        #
-# # # # # # # # # # # # # # # # # # # #
-
-# Ignoriere die Liste der Business Epics, da diese benutzerspezifisch ist
-# Es wird empfohlen, stattdessen eine Vorlagendatei wie 'BE_Liste.example.txt' zu committen
-BE_Liste*.txt
-/src/utils/__pycache__
-/src/utils/__pycache__
-/_Backup
-/src/utils/__pycache__
-/src/utils/__pycache__
-/src/utils/__pycache__
