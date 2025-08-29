@@ -15,8 +15,8 @@ from pathlib import Path
 import glob
 from collections import defaultdict
 import matplotlib.patches as mpatches
-from utils.logger_config import logger
-from utils.config import (
+from src.utils.logger_config import logger
+from src.utils.config import (
     JIRA_ISSUES_DIR,
     ISSUE_TREES_DIR,
     JSON_SUMMARY_DIR,
