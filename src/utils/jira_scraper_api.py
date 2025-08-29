@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 
 from utils.jira_api_client import JiraApiClient
-from utils.config import JIRA_ISSUES_DIR, ISSUE_LOG_FILE
+from utils.config import JIRA_ISSUES_DIR, ISSUE_LOG_FILE, JIRA_LINK_TYPES_TO_FOLLOW
 from utils.logger_config import logger
 
 class JiraScraper:
@@ -221,12 +221,17 @@ class JiraScraper:
         """
         Iterative DFS to avoid recursion depth errors and infinite loops.
         Uses self.processed_issues as visited set.
+        Filters links based on the JIRA_LINK_TYPES_TO_FOLLOW whitelist.
         """
         if not issue_data:
             return
 
         stack = []
         for rel in issue_data.get("issue_links", []) or []:
+            # --- MODIFIED: Only follow whitelisted link types ---
+            if rel.get("relation_type") not in JIRA_LINK_TYPES_TO_FOLLOW:
+                continue
+
             k, u = rel.get("key"), rel.get("url")
             if not k or not u:
                 continue
@@ -248,6 +253,10 @@ class JiraScraper:
 
             # enqueue its links
             for rel in child.get("issue_links", []) or []:
+                # --- MODIFIED: Only follow whitelisted link types ---
+                if rel.get("relation_type") not in JIRA_LINK_TYPES_TO_FOLLOW:
+                    continue
+
                 ck, cu = rel.get("key"), rel.get("url")
                 if not ck or not cu:
                     continue

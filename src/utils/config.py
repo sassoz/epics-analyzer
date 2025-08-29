@@ -30,6 +30,22 @@ for directory in [LOGS_DIR, JIRA_ISSUES_DIR, HTML_REPORTS_DIR, ISSUE_TREES_DIR, 
 # Template file
 EPIC_HTML_TEMPLATE = os.path.join(TEMPLATES_DIR, 'epic-html_template.html')
 
+# --- NEW: Whitelist for Jira link traversal ---
+# Defines which issue link relation types the scraper should follow.
+# This prevents the scraper from traversing tangentially related epics.
+#
+# Common types:
+# - 'child': For sub-tasks.
+# - 'realized_by': Used in this project for parent->child relationships between epics.
+# - 'issue_in_epic': For stories or other issues inside an epic.
+#
+JIRA_LINK_TYPES_TO_FOLLOW = [
+    "child",
+    "realized_by",
+    "issue_in_epic",
+]
+
+
 # LLM Models
 LLM_MODEL_HTML_GENERATOR = "gpt-4.1-mini"
 LLM_MODEL_BUSINESS_VALUE = "gpt-4.1"
