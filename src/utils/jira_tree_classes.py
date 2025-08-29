@@ -1,10 +1,6 @@
 # src/utils/jira_tree_classes.py
 """
 Module for creating, visualizing, and processing JIRA issue relationship trees.
-
-This module provides the functionality to create JIRA issue trees based on a
-flexibly configurable hierarchy of issue links, to visualize them graphically,
-and to generate structured context summaries for further processing.
 """
 
 import json
@@ -29,27 +25,8 @@ from src.utils.config import (
 class JiraTreeGenerator:
     """
     Creates a graph of JIRA issues based on a flexible hierarchy.
-
-    This class searches JSON files of JIRA issues and builds a directed
-    graph (a tree) representing the relationships between the issues. The type
-    of relationships to follow is flexibly configurable.
     """
     def __init__(self, json_dir=JIRA_ISSUES_DIR, allowed_types=None, verbose=False):
-        """
-        Initializes the JiraTreeGenerator.
-
-        This class can be configured to use different hierarchy types.
-        If no configuration (`allowed_types`) is passed, it falls back
-        to the default configuration `JIRA_TREE_MANAGEMENT`.
-
-        Args:
-            json_dir (str): The directory containing the JIRA issue JSON files.
-            allowed_types (dict, optional): A dictionary that maps an issue type (str) to a
-                                            list of allowed relationship types (str).
-                                            E.g., {'Epic': ['realized_by'], ...}.
-                                            If None, the default from the config is used.
-            verbose (bool): If True, enables detailed print statements for debugging.
-        """
         self.json_dir = json_dir
         self.allowed_hierarchy_types = allowed_types if allowed_types is not None else JIRA_TREE_MANAGEMENT
         self.verbose = verbose
@@ -57,7 +34,6 @@ class JiraTreeGenerator:
     def _log_missing_issue(self, issue_key: str):
         """
         Logs a missing issue key in the central log file.
-        Prevents duplicate entries to keep the file clean.
         """
         try:
             existing_keys = set()
@@ -72,16 +48,9 @@ class JiraTreeGenerator:
         except Exception as e:
             logger.error(f"Error writing missing key '{issue_key}' to the log file: {e}")
 
-
     def read_jira_issue(self, file_path):
         """
         Reads a JIRA issue from a JSON file.
-
-        Args:
-            file_path (str): The path to the JSON file.
-
-        Returns:
-            dict or None: A dictionary with the issue data or None in case of an error.
         """
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -100,6 +69,7 @@ class JiraTreeGenerator:
         exact_path = os.path.join(self.json_dir, f"{key}.json")
         if os.path.exists(exact_path):
             return exact_path
+        # Fallback to glob search if exact match not found
         json_files = glob.glob(os.path.join(self.json_dir, "*.json"))
         for file_path in json_files:
             try:
@@ -143,83 +113,73 @@ class JiraTreeGenerator:
             return None
 
         resolutions_to_skip = ['Rejected', 'Withdrawn']
-        root_resolution = root_data.get('resolution')
-        if not include_rejected and root_resolution in resolutions_to_skip:
-            logger.error(f"Error: Root issue {root_key} has resolution '{root_resolution}' and will not be processed.")
+        if not include_rejected and root_data.get('resolution') in resolutions_to_skip:
+            logger.error(f"Error: Root issue {root_key} has resolution '{root_data.get('resolution')}' and will not be processed.")
             return None
 
         G.add_node(root_key, **root_data)
         visited = set()
 
         def _add_children(parent_key):
-            """Recursive helper function that generically searches for children."""
-            if parent_key in visited:
-                return
+            if parent_key in visited: return
             visited.add(parent_key)
 
             parent_data = G.nodes[parent_key]
             parent_issue_type = parent_data.get('issue_type', '')
             
-            if self.verbose:
-                print(f"\n🔎 Processing Parent: {parent_key} (Type: {parent_issue_type})")
+            if self.verbose: print(f"\n🔎 Processing Parent: {parent_key} (Type: {parent_issue_type})")
 
             allowed_relations = self.allowed_hierarchy_types.get(parent_issue_type, [])
 
-            if not allowed_relations:
-                if self.verbose:
-                    print(f"  -> ⚠️ No relations configured for type '{parent_issue_type}'. Stopping this branch.")
+            # --- SECTION 1: Process standard issue links ---
+            if 'issue_links' in parent_data:
+                if self.verbose: print(f"  -> Allowed Relations for '{parent_issue_type}': {allowed_relations}")
+                for link in parent_data['issue_links']:
+                    relation_type = link.get('relation_type')
+                    child_key = link.get('key')
+                    if not child_key or not relation_type: continue
+
+                    if self.verbose: print(f"  - Found link: {parent_key} -> '{relation_type}' -> {child_key}", end="")
+
+                    if relation_type in allowed_relations:
+                        if self.verbose: print(" ... ✅ MATCH")
+                        # Generic child processing function
+                        _process_and_add_child(parent_key, child_key)
+                    else:
+                        if self.verbose: print(" ... ❌ NO MATCH")
+            
+            # --- SECTION 2: Process issues_in_epic (NEW) ---
+            if parent_issue_type == 'Epic' and 'issues_in_epic' in parent_data:
+                if self.verbose: print(f"  -> Found 'Issues in epic' section for {parent_key}")
+                for issue_in_epic in parent_data['issues_in_epic']:
+                    child_key = issue_in_epic.get('key')
+                    if not child_key: continue
+                    if self.verbose: print(f"  - Found issue in epic: {parent_key} -> {child_key} ... ✅ ADDING")
+                    _process_and_add_child(parent_key, child_key)
+
+        def _process_and_add_child(parent_key, child_key):
+            """Helper to avoid code duplication. Fetches, validates, and adds a child to the graph."""
+            child_file_path = self.find_json_for_key(child_key)
+            if not child_file_path:
+                logger.warning(f"Skipping child {child_key}: JSON file not found.")
+                self._log_missing_issue(child_key)
                 return
-            if 'issue_links' not in parent_data:
-                if self.verbose:
-                    print("  -> ⚠️ Parent has no 'issue_links' field. Stopping this branch.")
+
+            child_data = self.read_jira_issue(child_file_path)
+            if not child_data:
+                logger.warning(f"Skipping child {child_key}: JSON file could not be read.")
                 return
 
-            if self.verbose:
-                print(f"  -> Allowed Relations for '{parent_issue_type}': {allowed_relations}")
+            if not include_rejected and child_data.get('resolution') in resolutions_to_skip:
+                logger.info(f"Skipping child {child_key} because its resolution is '{child_data.get('resolution')}'.")
+                return
 
-            for link in parent_data['issue_links']:
-                relation_type = link.get('relation_type')
-                child_key = link.get('key')
-                
-                if not child_key or not relation_type:
-                    continue
-
-                if self.verbose:
-                    print(f"  - Found link: {parent_key} -> '{relation_type}' -> {child_key}", end="")
-
-                if relation_type in allowed_relations:
-                    if self.verbose:
-                        print(" ... ✅ MATCH")
-
-                    child_file_path = self.find_json_for_key(child_key)
-                    if not child_file_path:
-                        logger.warning(f"Skipping child {child_key}: JSON file not found.")
-                        self._log_missing_issue(child_key)
-                        continue
-
-                    child_data = self.read_jira_issue(child_file_path)
-                    if not child_data:
-                        logger.warning(f"Skipping child {child_key}: JSON file could not be read.")
-                        continue
-
-                    child_resolution = child_data.get('resolution')
-                    if not include_rejected and child_resolution in resolutions_to_skip:
-                        logger.info(f"Skipping child {child_key} because its resolution is '{child_resolution}'.")
-                        continue
-
-                    G.add_node(child_key, **child_data)
-                    G.add_edge(parent_key, child_key)
-                    _add_children(child_key)
-                else:
-                    if self.verbose:
-                        print(" ... ❌ NO MATCH")
+            G.add_node(child_key, **child_data)
+            G.add_edge(parent_key, child_key)
+            _add_children(child_key) # Recurse
 
         _add_children(root_key)
 
-        if G.number_of_nodes() <= 1 and not root_data.get('issue_links'):
-            logger.info(f"Warning: The root issue {root_key} has no 'issue_links' entries")
-
-        logger.info(f"Tree built. Number of nodes: {G.number_of_nodes()}")
         if self.verbose:
             print("="*50)
             print(f"🌲 END: Tree building complete. Total nodes: {G.number_of_nodes()}")
@@ -244,9 +204,8 @@ class JiraTreeVisualizer:
         """
         Creates and saves a visualization of the graph.
         """
-        if G is None or not isinstance(G, nx.DiGraph) or G.number_of_nodes() <= 1:
-            if G is None or not isinstance(G, nx.DiGraph): logger.error("Error: Invalid graph provided.")
-            else: logger.info(f"Warning: The graph contains only the root node {root_key}.")
+        if G is None or not isinstance(G, nx.DiGraph) or G.number_of_nodes() == 0:
+            logger.warning(f"Graph for {root_key} is empty or invalid. Visualization skipped.")
             return False
 
         if output_file is None:
@@ -305,13 +264,10 @@ class JiraContextGenerator:
 
     def generate_context(self, G, root_key, output_file=None):
         """
-        Generates a JSON-formatted string and saves it to a file.
+        Generates a JSON-formatted string.
         """
-        if G is None or not isinstance(G, nx.DiGraph):
-            logger.error("Error: Invalid graph provided.")
-            return "{}"
-        if root_key not in G:
-            logger.error(f"Error: Root node {root_key} not found in the graph.")
+        if G is None or not isinstance(G, nx.DiGraph) or root_key not in G:
+            logger.error(f"Invalid graph or root key '{root_key}' for context generation.")
             return "{}"
 
         issues_data = []
@@ -340,6 +296,4 @@ class JiraContextGenerator:
             issues_data.append(issue_data)
 
         context_json = {"root": root_key, "issues": issues_data}
-        json_str = json.dumps(context_json, indent=2, ensure_ascii=False)
-
-        return json_str
+        return json.dumps(context_json, indent=2, ensure_ascii=False)

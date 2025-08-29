@@ -43,7 +43,6 @@ JIRA_LINK_TYPES_TO_FOLLOW = [
     "child",
     "realized_by",
     "issue_in_epic",
-    "linked",
 ]
 
 
@@ -75,7 +74,7 @@ JIRA_TREE_MANAGEMENT = {
     "Business Epic": ["realized_by", "child"],
     "Portfolio Epic": ["realized_by", "child"],
     "Initiative": ["realized_by", "child"],
-    "Epic": ["issue_in_epic", "realized_by", "linked"],
+    "Epic": ["issue_in_epic", "realized_by"],
 }
 
 JIRA_TREE_FULL = {
@@ -83,5 +82,5 @@ JIRA_TREE_FULL = {
     "Business Epic": ["realized_by", "child"],
     "Portfolio Epic": ["realized_by", "child"],
     "Initiative": ["realized_by", "child"],
-    "Epic": ["issue_in_epic", "realized_by", "linked"],
+    "Epic": ["issue_in_epic", "realized_by"],
 }

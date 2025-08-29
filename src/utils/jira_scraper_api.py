@@ -23,6 +23,7 @@ class JiraScraper:
       - description (plain text if present)
       - issue_links: [{relation_type, key, url, ...}]
       - parent_link (added in enrichment pass)
+      - issues_in_epic: [{key, url, ...}] <--- NEW
     """
 
     def __init__(self, url, email, model="o3-mini", token_tracker=None, azure_client=None, scrape_mode='true', check_days=7):
@@ -86,7 +87,8 @@ class JiraScraper:
             "fix_versions": [v.get("name") for v in (f.get("fixVersions") or [])],
             "created": f.get("created"),
             "updated": f.get("updated"),
-            "issue_links": []
+            "issue_links": [],
+            "issues_in_epic": [] # <--- NEW FIELD
         }
 
         # optional custom fields (if env provided)
@@ -120,7 +122,7 @@ class JiraScraper:
                     "link_type": t.get("name"),
                     "direction": "outward",
                     "key": k,
-                    "url": f"{self.client.browse}/{k}"
+                    "url": f'{self.client.browse}/{k}'
                 })
             if "inwardIssue" in link:
                 k = link["inwardIssue"]["key"]
@@ -129,7 +131,7 @@ class JiraScraper:
                     "link_type": t.get("name"),
                     "direction": "inward",
                     "key": k,
-                    "url": f"{self.client.browse}/{k}"
+                    "url": f'{self.client.browse}/{k}'
                 })
 
         # issues in epic (downstream) if this is an Epic
@@ -152,8 +154,8 @@ class JiraScraper:
                 k = ch["key"]
                 if k in seen: continue
                 seen.add(k)
-                data["issue_links"].append({
-                    "relation_type": "issue_in_epic",
+                # --- MODIFIED: ADD TO THE NEW FIELD ---
+                data["issues_in_epic"].append({
                     "key": k,
                     "url": f"{self.client.browse}/{k}"
                 })
@@ -231,9 +233,13 @@ class JiraScraper:
             return
 
         stack = []
-        for rel in issue_data.get("issue_links", []) or []:
-            # --- MODIFIED: Only follow whitelisted link types ---
-            if rel.get("relation_type") not in JIRA_LINK_TYPES_TO_FOLLOW:
+        # --- MODIFIED: INCLUDE issues_in_epic in traversal ---
+        links_to_process = issue_data.get("issue_links", []) + issue_data.get("issues_in_epic", [])
+
+        for rel in links_to_process:
+            relation_type = rel.get("relation_type")
+            # For "issues_in_epic", we don't need to check the whitelist
+            if relation_type and relation_type not in JIRA_LINK_TYPES_TO_FOLLOW and relation_type != "issue_in_epic":
                 continue
 
             k, u = rel.get("key"), rel.get("url")
@@ -256,9 +262,10 @@ class JiraScraper:
             self.processed_issues.add(k)
 
             # enqueue its links
-            for rel in child.get("issue_links", []) or []:
-                # --- MODified: Only follow whitelisted link types ---
-                if rel.get("relation_type") not in JIRA_LINK_TYPES_TO_FOLLOW:
+            child_links_to_process = child.get("issue_links", []) + child.get("issues_in_epic", [])
+            for rel in child_links_to_process:
+                relation_type = rel.get("relation_type")
+                if relation_type and relation_type not in JIRA_LINK_TYPES_TO_FOLLOW and relation_type != "issue_in_epic":
                     continue
 
                 ck, cu = rel.get("key"), rel.get("url")
@@ -282,13 +289,10 @@ class JiraScraper:
 
     def _enrich_issues_with_parent_links(self):
         """
-        After traversal, write a 'parent_link' into each child JSON file,
-        derived from their parents' issue_links (same behavior as the Selenium version).
+        After traversal, write a 'parent_link' into each child JSON file.
         """
         logger.info("--- Enriching child issues with parent_link ---")
-        if not self.processed_issues:
-            logger.info("No issues processed; skip enrichment.")
-            return
+        if not self.processed_issues: return
 
         enrichment_map = {}
         base = self.url.split('/browse/')[0] + '/browse/'
@@ -298,18 +302,18 @@ class JiraScraper:
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     parent = json.load(f)
-                if parent.get("issue_links"):
+                
+                links_to_check = parent.get("issue_links", []) + parent.get("issues_in_epic", [])
+                if links_to_check:
                     parent_link = {"key": parent_key, "url": base + parent_key}
-                    for link in parent["issue_links"]:
+                    for link in links_to_check:
                         child_key = link.get("key")
                         if child_key:
                             enrichment_map[child_key] = parent_link
             except Exception:
                 continue
 
-        if not enrichment_map:
-            logger.info("No child relationships found; skip enrichment.")
-            return
+        if not enrichment_map: return
 
         enriched = 0
         for child_key, parent_link in enrichment_map.items():
