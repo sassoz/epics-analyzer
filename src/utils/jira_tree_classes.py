@@ -159,6 +159,11 @@ class JiraTreeGenerator:
             return None
 
         root_issue_type = root_data.get('issue_type', '')
+        if not root_issue_type:
+            logger.error(f"Error: Root issue {root_key} has an empty 'issue_type'. The JSON file might be incomplete.")
+            logger.error(f"Suggestion: Try running the scraper with '--scraper true' for this issue to refresh the data.")
+            return None
+
         if root_issue_type not in self.allowed_hierarchy_types:
             logger.error(f"Error: Root issue {root_key} is of type '{root_issue_type}', "
                          f"which is not a valid starting point in the hierarchy configuration.")
