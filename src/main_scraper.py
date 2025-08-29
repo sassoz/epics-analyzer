@@ -136,8 +136,9 @@ def main():
 
             # --- NEW: Automatically generate the tree after scraping ---
             logger.info(f"--- Generating issue tree for {epic} ---")
+            data_provider = ProjectDataProvider(epic_id=epic, hierarchy_config=JIRA_TREE_FULL, verbose=args.verbose)
             tree_generator = JiraTreeGenerator(allowed_types=JIRA_TREE_FULL, verbose=args.verbose)
-            issue_tree = tree_generator.build_issue_tree(epic)
+            issue_tree = tree_generator.build_tree_for_root(epic, data_provider)
             if issue_tree:
                 visualizer = JiraTreeVisualizer()
                 visualizer.visualize(issue_tree, epic)
@@ -188,7 +189,7 @@ def main():
 
                 logger.info(f"Creating full tree for visualization of {epic} with JIRA_TREE_MANAGEMENT.")
                 tree_generator_full = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT, verbose=args.verbose)
-                issue_tree_for_visualization = tree_generator_full.build_issue_tree(epic)
+                issue_tree_for_visualization = tree_generator_full.build_tree_for_root(epic, data_provider)
 
                 if issue_tree_for_visualization:
                     visualizer.visualize(issue_tree_for_visualization, epic)
@@ -197,10 +198,10 @@ def main():
 
                 issue_tree_for_context = issue_tree_for_visualization
 
-                if issue_tree_for_context and len(issue_tree_for_context) > MAX_JIRA_TREE_CONTEXT_SIZE:
+                if issue_tree_for_context and len(.issue_tree_for_context) > MAX_JIRA_TREE_CONTEXT_SIZE:
                     logger.info(f"Management tree for LLM context of {epic} is too large with {len(issue_tree_for_context)} nodes (Max: {MAX_JIRA_TREE_CONTEXT_SIZE}). Reducing to LIGHT hierarchy.")
                     tree_generator_light = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT_LIGHT, verbose=args.verbose)
-                    issue_tree_for_context = tree_generator_light.build_issue_tree(epic)
+                    issue_tree_for_context = tree_generator_light.build_tree_for_root(epic, data_provider)
 
                 if not issue_tree_for_context:
                     logger.warning(f"Could not create a valid tree for LLM context generation of {epic}. Skipping summary generation.")

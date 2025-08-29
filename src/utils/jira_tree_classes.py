@@ -10,16 +10,15 @@ import matplotlib.pyplot as plt
 logger = logging.getLogger(__name__)
 
 class JiraTreeGenerator:
-    def __init__(self, jira_client, project_data_provider, verbose=False):
-        self.jira_client = jira_client
+    def __init__(self, allowed_types, verbose=False):
+        self.verbose = verbose
+        self.allowed_types = allowed_types
+        
+    def build_tree_for_root(self, root_key, project_data_provider):
         self.issue_details = project_data_provider.issue_details
         self.issue_tree = project_data_provider.issue_tree
-        self.verbose = verbose
-        self.all_issue_keys = list(project_data_provider.issue_details.keys())
         self.config = project_data_provider.config
-        self.project_data_provider = project_data_provider
-        
-    def build_tree_for_root(self, root_key):
+
         if self.verbose:
             print(f"\n{'='*50}\n?? START: Building Tree for Root: {root_key}")
             print(f"CONFIG: {self.config.get('jira_issue_relation_map')}")
@@ -121,8 +120,8 @@ class JiraTreeGenerator:
             print(f"\n{'='*50}\n?? END: Tree building complete. Total nodes: {self.issue_tree.number_of_nodes()}")
             print(f"{'='*50}\n")
             
-        self.project_data_provider.issue_tree = self.issue_tree
-        self.project_data_provider.find_and_set_root_node()
+        project_data_provider.issue_tree = self.issue_tree
+        project_data_provider.find_and_set_root_node()
 
         return self.issue_tree
 
