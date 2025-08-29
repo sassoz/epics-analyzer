@@ -110,6 +110,7 @@ def main():
     parser.add_argument('--issue', type=str, default=None, help='Specific Jira issue ID')
     parser.add_argument('--file', type=str, default=None, help='Path to the TXT file with Business Epics')
     parser.add_argument('--translate', type=str.lower, choices=['true', 'false', 'check'], default='false', help="Translates the HTML report to English.")
+    parser.add_argument('--verbose', action='store_true', help='Enable detailed logging during tree generation.')
 
     args = parser.parse_args()
 
@@ -135,7 +136,7 @@ def main():
 
             # --- NEW: Automatically generate the tree after scraping ---
             logger.info(f"--- Generating issue tree for {epic} ---")
-            tree_generator = JiraTreeGenerator(allowed_types=JIRA_TREE_FULL)
+            tree_generator = JiraTreeGenerator(allowed_types=JIRA_TREE_FULL, verbose=args.verbose)
             issue_tree = tree_generator.build_issue_tree(epic)
             if issue_tree:
                 visualizer = JiraTreeVisualizer()
@@ -177,7 +178,7 @@ def main():
             if complete_epic_data is None:
                 logger.info("No valid cache file found or recreation forced. Generating all data...")
 
-                data_provider = ProjectDataProvider(epic_id=epic, hierarchy_config=JIRA_TREE_FULL)
+                data_provider = ProjectDataProvider(epic_id=epic, hierarchy_config=JIRA_TREE_FULL, verbose=args.verbose)
                 if not data_provider.is_valid():
                     logger.error(f"Error: Could not load valid data for analysis of Epic '{epic}'. Processing will be skipped.")
                     continue
@@ -186,7 +187,7 @@ def main():
                 reporter.create_backlog_plot(analysis_results.get("BacklogAnalyzer", {}), epic)
 
                 logger.info(f"Creating full tree for visualization of {epic} with JIRA_TREE_MANAGEMENT.")
-                tree_generator_full = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT)
+                tree_generator_full = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT, verbose=args.verbose)
                 issue_tree_for_visualization = tree_generator_full.build_issue_tree(epic)
 
                 if issue_tree_for_visualization:
@@ -198,7 +199,7 @@ def main():
 
                 if issue_tree_for_context and len(issue_tree_for_context) > MAX_JIRA_TREE_CONTEXT_SIZE:
                     logger.info(f"Management tree for LLM context of {epic} is too large with {len(issue_tree_for_context)} nodes (Max: {MAX_JIRA_TREE_CONTEXT_SIZE}). Reducing to LIGHT hierarchy.")
-                    tree_generator_light = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT_LIGHT)
+                    tree_generator_light = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT_LIGHT, verbose=args.verbose)
                     issue_tree_for_context = tree_generator_light.build_issue_tree(epic)
 
                 if not issue_tree_for_context:
