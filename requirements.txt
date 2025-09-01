@@ -15,3 +15,4 @@ azure-core
 networkx
 matplotlib
 graphviz
+pygraphviz # Required for networkx.nx_agraph.graphviz_layout
