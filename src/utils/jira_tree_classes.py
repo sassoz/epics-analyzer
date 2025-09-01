@@ -138,7 +138,7 @@ class JiraTreeVisualizer:
             return
 
         plt.figure(figsize=(20, 15))
-        pos = nx.nx_agraph.graphviz_layout(issue_tree, prog="dot")
+        pos = nx.drawing.nx_pydot.graphviz_layout(issue_tree, prog="dot")
         
         nx.draw(issue_tree, pos, with_labels=True, node_size=3000, node_color="skyblue", font_size=10, font_weight="bold")
         
