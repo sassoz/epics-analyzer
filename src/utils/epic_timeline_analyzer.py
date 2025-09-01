@@ -63,8 +63,15 @@ if src_dir not in sys.path:
 
 from utils.logger_config import logger
 from utils.jira_tree_classes import JiraTreeGenerator
-from utils.jira_scraper import JiraScraper
-from utils.config import JIRA_ISSUES_DIR, PLOT_DIR, JIRA_EMAIL, LLM_MODEL_BUSINESS_VALUE, SCRAPER_CHECK_DAYS
+from utils.jira_scraper_api import JiraScraper
+from utils.config import (
+    JIRA_ISSUES_DIR,
+    PLOT_DIR,
+    JIRA_EMAIL,
+    LLM_MODEL_BUSINESS_VALUE,
+    SCRAPER_CHECK_DAYS,
+    JIRA_TREE_FULL,
+)
 
 
 class EpicTimelineAnalyzer:
@@ -92,7 +99,7 @@ class EpicTimelineAnalyzer:
         """
         self.epic_id = epic_id
         self.json_dir = json_dir
-        self.tree_generator = JiraTreeGenerator(json_dir=self.json_dir)
+        self.tree_generator = JiraTreeGenerator(allowed_types=JIRA_TREE_FULL)
         self.scraper = scraper
         logger.info(f"EpicTimelineAnalyzer für '{self.epic_id}' initialisiert.")
 
