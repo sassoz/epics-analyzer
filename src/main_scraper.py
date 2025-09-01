@@ -198,7 +198,7 @@ def main():
 
                 issue_tree_for_context = issue_tree_for_visualization
 
-                if issue_tree_for_context and len(.issue_tree_for_context) > MAX_JIRA_TREE_CONTEXT_SIZE:
+                if issue_tree_for_context and len(issue_tree_for_context) > MAX_JIRA_TREE_CONTEXT_SIZE:
                     logger.info(f"Management tree for LLM context of {epic} is too large with {len(issue_tree_for_context)} nodes (Max: {MAX_JIRA_TREE_CONTEXT_SIZE}). Reducing to LIGHT hierarchy.")
                     tree_generator_light = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT_LIGHT, verbose=args.verbose)
                     issue_tree_for_context = tree_generator_light.build_tree_for_root(epic, data_provider)
