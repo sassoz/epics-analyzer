@@ -15,6 +15,7 @@ class ProjectDataProvider:
         self.epic_id = epic_id
         self.json_dir = json_dir
         # Der Generator wird jetzt mit der übergebenen Konfiguration initialisiert
+        # `json_dir` is passed explicitly to avoid relying on defaults
         self.tree_generator = JiraTreeGenerator(json_dir=self.json_dir, allowed_types=hierarchy_config)
 
         # Lade alle Kerndaten

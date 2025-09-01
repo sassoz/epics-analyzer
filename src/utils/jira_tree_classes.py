@@ -24,7 +24,7 @@ from utils.config import (
     JSON_SUMMARY_DIR,
     LOGS_DIR,
     JIRA_TREE_MANAGEMENT,
-    ISSUE_LOG_FILE # <-- NEUER IMPORT
+    ISSUE_LOG_FILE
 )
 
 
@@ -36,7 +36,7 @@ class JiraTreeGenerator:
     Graphen (einen Baum), der die Beziehungen zwischen den Issues darstellt. Die Art
     der zu verfolgenden Beziehungen ist flexibel konfigurierbar.
     """
-    def __init__(self, json_dir=JIRA_ISSUES_DIR, allowed_types=None):
+    def __init__(self, json_dir: str = JIRA_ISSUES_DIR, allowed_types: dict | None = None):
         """
         Initialisiert den JiraTreeGenerator.
 
