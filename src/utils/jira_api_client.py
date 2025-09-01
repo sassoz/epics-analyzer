@@ -4,11 +4,6 @@ import requests
 from pathlib import Path
 
 def _load_dotenv():
-    """
-    Minimal .env loader (no external deps).
-    Looks in CWD and its parents for a '.env' file and injects any VAR=VALUE
-    that isn't already in os.environ. Supports simple quoted values.
-    """
     for d in [Path.cwd(), *Path.cwd().parents]:
         p = d / ".env"
         if not p.exists():
@@ -25,7 +20,7 @@ def _load_dotenv():
                     os.environ[k] = v
         except Exception:
             pass
-        break  # stop at the first .env we find
+        break
 
 class JiraApiClient:
     """
@@ -33,18 +28,15 @@ class JiraApiClient:
     Expects JIRA_API_TOKEN or JIRA_TOKEN to be set (can live in a .env file).
     """
     def __init__(self, base_url="https://jira.telekom.de", token=None, timeout=60):
-        _load_dotenv()  # <<< ensure .env is read
-
+        _load_dotenv()
         self.base_url = base_url.rstrip("/")
         self.api = f"{self.base_url}/rest/api/2"
         self.browse = f"{self.base_url}/browse"
         self.timeout = timeout
 
-        # Accept both names
         token = token or os.getenv("JIRA_API_TOKEN") or os.getenv("JIRA_TOKEN")
         if not token:
-            raise RuntimeError("No API token found. Set JIRA_API_TOKEN (or JIRA_TOKEN) "
-                               "in your environment or .env file.")
+            raise RuntimeError("No API token found. Set JIRA_API_TOKEN (or JIRA_TOKEN).")
 
         self.s = requests.Session()
         self.s.headers.update({
@@ -52,7 +44,6 @@ class JiraApiClient:
             "Accept": "application/json"
         })
 
-    # --- Core calls ---
     def ping(self):
         r = self.s.get(f"{self.api}/myself", timeout=self.timeout)
         r.raise_for_status()
@@ -67,8 +58,29 @@ class JiraApiClient:
         return r.json()
 
     def search(self, jql, fields=None, max_results=500):
+        """
+        Robust JQL search: try GET first (often allowed behind corp proxies),
+        then fall back to POST. Return [] on 400 instead of raising.
+        """
+        params = {"jql": jql, "maxResults": max_results}
+        if fields:
+            params["fields"] = fields
+
+        # 1) Try GET
+        r = self.s.get(f"{self.api}/search", params=params, timeout=self.timeout)
+        if r.status_code == 200:
+            return r.json().get("issues", [])
+        if r.status_code == 400:
+            return []
+
+        # 2) Fallback: POST
         payload = {"jql": jql, "maxResults": max_results}
-        if fields: payload["fields"] = fields
+        if fields:
+            payload["fields"] = fields
         r = self.s.post(f"{self.api}/search", json=payload, timeout=self.timeout)
+        if r.status_code == 200:
+            return r.json().get("issues", [])
+        if r.status_code == 400:
+            return []
+
         r.raise_for_status()
-        return r.json().get("issues", [])

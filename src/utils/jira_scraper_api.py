@@ -139,13 +139,25 @@ class JiraScraper:
             children = []
             # Prefer modern JQL first
             try:
-                children += self.client.search(f'parent = "{issue["key"]}"', fields="summary,status,assignee,issuetype")
+                children += self.client.search(
+                    f'parent = "{issue["key"]}"',
+                    fields="summary,status,assignee,issuetype",
+                )
             except Exception:
                 pass
+
             # Fallback if parentEpic not supported
             if not children and self.cf_epic_link:
                 try:
-                    children += self.client.search(f'"{self.cf_epic_link}" = "{issue["key"]}"', fields="summary,status,assignee,issuetype")
+                    # Accept both: field name ("Epic Link") OR customfield id ("customfield_10008")
+                    if str(self.cf_epic_link).startswith("customfield_"):
+                        cfnum = self.cf_epic_link.split("_")[-1]
+                        jql = f'cf[{cfnum}] = "{issue["key"]}"'
+                    else:
+                        jql = f'"{self.cf_epic_link}" = "{issue["key"]}"'
+                    children += self.client.search(
+                        jql, fields="summary,status,assignee,issuetype"
+                    )
                 except Exception:
                     pass
 
