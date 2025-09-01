@@ -1,7 +1,7 @@
 # src/utils/project_data_provider.py
 import json
 import os
-import sys
+import networkx as nx
 from utils.logger_config import logger
 from utils.jira_tree_classes import JiraTreeGenerator
 from utils.config import JIRA_ISSUES_DIR, JSON_SUMMARY_DIR # Import JSON_SUMMARY_DIR
@@ -14,13 +14,19 @@ class ProjectDataProvider:
     def __init__(self, epic_id: str, json_dir: str = JIRA_ISSUES_DIR, hierarchy_config: dict = None, verbose: bool = False):
         self.epic_id = epic_id
         self.json_dir = json_dir
+        self.config = {"jira_issue_relation_map": hierarchy_config}
+
+        # Initiale Datenstrukturen, die vom TreeGenerator erwartet werden
+        self.issue_tree = nx.DiGraph()
+        self.issue_details = self._build_issue_details_cache()
+
         # Der Generator wird jetzt mit der übergebenen Konfiguration initialisiert
         self.tree_generator = JiraTreeGenerator(allowed_types=hierarchy_config, verbose=verbose)
 
-        # Lade alle Kerndaten
-        self.issue_tree = self.tree_generator.build_issue_tree(self.epic_id, include_rejected=False)
+        # Baue den Issue-Baum mit dem neuen Generator
+        self.tree_generator.build_tree_for_root(self.epic_id, self)
+
         self.all_activities = self._gather_all_activities()
-        self.issue_details = self._build_issue_details_cache()
 
         if self.all_activities:
             self.all_activities.sort(key=lambda x: x.get('zeitstempel_iso', ''))
@@ -55,8 +61,13 @@ class ProjectDataProvider:
     def _build_issue_details_cache(self) -> dict:
         """Erstellt einen zentralen Cache mit aufbereiteten Details zu jedem Issue."""
         cache = {}
-        if not self.issue_tree: return {}
-        for issue_key in self.issue_tree.nodes():
+
+        if self.issue_tree and len(self.issue_tree.nodes()) > 0:
+            issue_keys = list(self.issue_tree.nodes())
+        else:
+            issue_keys = [f[:-5] for f in os.listdir(self.json_dir) if f.endswith('.json')]
+
+        for issue_key in issue_keys:
             file_path = os.path.join(self.json_dir, f"{issue_key}.json")
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
@@ -77,7 +88,9 @@ class ProjectDataProvider:
                         'points': points,
                         'target_start': data.get('target_start'),
                         'target_end': data.get('target_end'),
-                        'fix_versions': data.get('fix_versions')
+                        'fix_versions': data.get('fix_versions'),
+                        'links': data.get('links', []),
+                        'issues_in_epic': data.get('issues_in_epic', [])
                     }
             except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
                 logger.warning(f"Konnte Details für Issue '{issue_key}' nicht laden: {e}")
