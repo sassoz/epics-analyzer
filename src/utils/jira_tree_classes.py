@@ -24,6 +24,9 @@ class JiraTreeGenerator:
             print(f"CONFIG: {self.config.get('jira_issue_relation_map')}")
             print(f"{'='*50}\n")
 
+        # Ensure the root node is added to the tree
+        self.issue_tree.add_node(root_key)
+
         # Initialize the queue with the root issue
         processing_queue = [root_key]
         processed_keys = {root_key}
