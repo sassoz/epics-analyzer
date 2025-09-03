@@ -21,6 +21,9 @@
 # Ignore raw Jira issue JSONs
 /jira_issues/
 
+# Ignore Templates
+/templates/
+
 #######################################
 #        DEPENDENCIES & ENVIRONMENT   #
 #######################################
