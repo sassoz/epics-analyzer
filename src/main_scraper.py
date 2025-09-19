@@ -5,6 +5,7 @@ import re
 import sys
 import json
 import argparse
+import logging
 import yaml
 
 # Add the parent directory (project root) to the search path...
@@ -62,6 +63,40 @@ ANALYZERS_TO_RUN = [
 ]
 
 
+class VerboseStepLogger:
+    """Utility class to emit structured, numbered step logs."""
+
+    def __init__(self, log_instance):
+        self.logger = log_instance
+        self.step_count = 0
+
+    def log_step(self, message):
+        """Log a high-level step with an incremented step counter."""
+        self.step_count += 1
+        self.logger.info(f"[STEP {self.step_count}] {message}")
+
+    def log_sub_step(self, message):
+        """Log a sub-step that belongs to the current high-level step."""
+        step_label = self.step_count if self.step_count else "-"
+        self.logger.info(f"[STEP {step_label}] -> {message}")
+
+    def log_detail(self, message):
+        """Log a detailed message that further explains the current sub-step."""
+        step_label = self.step_count if self.step_count else "-"
+        self.logger.info(f"[STEP {step_label}]    {message}")
+
+
+def configure_console_logging(verbose_enabled):
+    """Elevate console logging to INFO level when verbose mode is active."""
+    if not verbose_enabled:
+        return
+
+    logger.info("Verbose logging enabled. Console handler set to INFO level.")
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            handler.setLevel(logging.INFO)
+
+
 def load_prompt(filename, key):
     """Loads a prompt from a YAML file in PROMPTS_DIR."""
     file_path = os.path.join(PROMPTS_DIR, filename)
@@ -114,27 +149,53 @@ def main():
 
     args = parser.parse_args()
 
+    configure_console_logging(args.verbose)
+    step_logger = VerboseStepLogger(logger)
+    step_logger.log_step("Starting Jira scraping and analysis workflow.")
+    step_logger.log_detail(
+        f"Scraper mode: {args.scraper}, HTML summary mode: {args.html_summary}, "
+        f"Translation mode: {args.translate}, Verbose: {args.verbose}"
+    )
+    if args.issue:
+        step_logger.log_detail(f"Processing single issue: {args.issue}")
+    if args.file:
+        step_logger.log_detail(f"Business Epic list file provided: {args.file}")
+
+    step_logger.log_sub_step("Initializing token usage tracker.")
     token_tracker = TokenUsage(log_file_path=TOKEN_LOG_FILE)
 
     business_epics = [args.issue] if args.issue else get_business_epics_from_file(args.file)
+    if business_epics:
+        preview = ", ".join(business_epics[:5])
+        suffix = "..." if len(business_epics) > 5 else ""
+        step_logger.log_sub_step(
+            f"Identified {len(business_epics)} Business Epic(s) to process: {preview}{suffix}"
+        )
+    else:
+        step_logger.log_sub_step("No Business Epics identified after input parsing.")
     if not business_epics:
         print("No Business Epics found. Program will be terminated.")
         return
 
     if args.scraper != 'false':
+        step_logger.log_step(f"Starting scraping stage in mode '{args.scraper}'.")
         print(f"\n--- Scraping mode started (Mode: {args.scraper}) ---")
-        
+
         scraper = JiraScraper(
             f"https://jira.telekom.de/browse/{business_epics[0]}", JIRA_EMAIL,
             scrape_mode=args.scraper,
             check_days=SCRAPER_CHECK_DAYS
         )
         for i, epic in enumerate(business_epics):
+            step_logger.log_sub_step(
+                f"[{epic}] Scraping Business Epic {i+1}/{len(business_epics)}."
+            )
             print(f"\n\n=============================================================\nProcessing Business Epic {i+1}/{len(business_epics)}: {epic}")
             scraper.url = f"https://jira.telekom.de/browse/{epic}"
             scraper.run(skip_login=(i > 0))
 
             # --- NEW: Automatically generate the tree after scraping ---
+            step_logger.log_detail(f"[{epic}] Generating issue tree using configuration 'JIRA_TREE_FULL'.")
             logger.info(f"--- Generating issue tree for {epic} ---")
             data_provider = ProjectDataProvider(epic_id=epic, hierarchy_config=JIRA_TREE_FULL, verbose=args.verbose)
             tree_generator = JiraTreeGenerator(allowed_types=JIRA_TREE_FULL, verbose=args.verbose)
@@ -142,14 +203,21 @@ def main():
             if issue_tree:
                 visualizer = JiraTreeVisualizer()
                 visualizer.visualize(issue_tree, epic)
+                step_logger.log_detail(f"[{epic}] Issue tree generated and visualization stored.")
                 logger.info(f"Successfully generated and saved the issue tree for {epic}.")
             else:
+                step_logger.log_detail(
+                    f"[{epic}] Issue tree generation failed. Visualization skipped."
+                )
                 logger.warning(f"Could not generate an issue tree for {epic}. The visualization will be skipped.")
 
+        step_logger.log_sub_step("Scraping stage completed.")
     else:
+        step_logger.log_step("Scraping stage skipped (mode set to 'false').")
         print("\n--- Scraping skipped (Mode: 'false') ---")
 
     if args.html_summary != 'false':
+        step_logger.log_step("Starting analysis and reporting stage.")
         print("\n--- Analysis / Reporting started ---")
 
         # Initialization of the required clients and generators
@@ -164,53 +232,82 @@ def main():
 
 
         for epic in business_epics:
+            step_logger.log_sub_step(f"[{epic}] Running analysis and report generation pipeline.")
             print(f"\n--- Start processing for {epic} ---")
             complete_epic_data = None
             complete_summary_path = os.path.join(JSON_SUMMARY_DIR, f"{epic}_complete_summary.json")
 
             if args.html_summary == 'check' and os.path.exists(complete_summary_path):
+                step_logger.log_detail(
+                    f"[{epic}] Attempting to load cached summary from {complete_summary_path}."
+                )
                 logger.info(f"Loading complete summary from cache: {complete_summary_path}")
                 try:
                     with open(complete_summary_path, 'r', encoding='utf-8') as f:
                         complete_epic_data = json.load(f)
                 except (json.JSONDecodeError, IOError) as e:
+                    step_logger.log_detail(
+                        f"[{epic}] Cache loading failed ({e}). A fresh summary will be generated."
+                    )
                     logger.info(f"Could not read cache file ({e}). Recreating summary.")
 
             if complete_epic_data is None:
                 logger.info("No valid cache file found or recreation forced. Generating all data...")
+                step_logger.log_detail(
+                    f"[{epic}] Generating new data because cache is missing or invalid."
+                )
 
                 data_provider = ProjectDataProvider(epic_id=epic, hierarchy_config=JIRA_TREE_FULL, verbose=args.verbose)
                 if not data_provider.is_valid():
+                    step_logger.log_detail(
+                        f"[{epic}] Data provider returned invalid data. Analysis will be skipped."
+                    )
                     logger.error(f"Error: Could not load valid data for analysis of Epic '{epic}'. Processing will be skipped.")
                     continue
                 print(f"     - Creating analysis for {epic}")
+                step_logger.log_detail(f"[{epic}] Running analyzers: {[analyzer.__name__ for analyzer in ANALYZERS_TO_RUN]}")
                 analysis_results = analysis_runner.run_analyses(data_provider)
                 reporter.create_backlog_plot(analysis_results.get("BacklogAnalyzer", {}), epic)
 
                 logger.info(f"Creating full tree for visualization of {epic} with JIRA_TREE_MANAGEMENT.")
+                step_logger.log_detail(
+                    f"[{epic}] Building management tree for visualization (JIRA_TREE_MANAGEMENT)."
+                )
                 tree_generator_full = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT, verbose=args.verbose)
                 issue_tree_for_visualization = tree_generator_full.build_tree_for_root(epic, data_provider)
 
                 if issue_tree_for_visualization:
                     visualizer.visualize(issue_tree_for_visualization, epic)
+                    step_logger.log_detail(f"[{epic}] Visualization created successfully.")
                 else:
+                    step_logger.log_detail(
+                        f"[{epic}] Management tree generation failed. Visualization will be missing."
+                    )
                     logger.warning(f"Could not create a tree for the visualization of {epic}. The graphic will be missing in the report.")
 
                 issue_tree_for_context = issue_tree_for_visualization
 
                 if issue_tree_for_context and len(issue_tree_for_context) > MAX_JIRA_TREE_CONTEXT_SIZE:
                     logger.info(f"Management tree for LLM context of {epic} is too large with {len(issue_tree_for_context)} nodes (Max: {MAX_JIRA_TREE_CONTEXT_SIZE}). Reducing to LIGHT hierarchy.")
+                    step_logger.log_detail(
+                        f"[{epic}] Context tree too large ({len(issue_tree_for_context)} nodes). Regenerating with LIGHT hierarchy."
+                    )
                     tree_generator_light = JiraTreeGenerator(allowed_types=JIRA_TREE_MANAGEMENT_LIGHT, verbose=args.verbose)
                     issue_tree_for_context = tree_generator_light.build_tree_for_root(epic, data_provider)
 
                 if not issue_tree_for_context:
+                    step_logger.log_detail(
+                        f"[{epic}] Unable to create context tree. Summary generation skipped."
+                    )
                     logger.warning(f"Could not create a valid tree for LLM context generation of {epic}. Skipping summary generation.")
                     continue
 
+                step_logger.log_detail(f"[{epic}] Generating JSON context for LLM summary.")
                 json_context = context_generator.generate_context(issue_tree_for_context, epic)
                 summary_prompt_template = load_prompt("summary_prompt.yaml", "user_prompt_template")
                 summary_prompt = summary_prompt_template.format(json_context=json_context)
                 print(f"     - Creating summary for {epic}")
+                step_logger.log_detail(f"[{epic}] Requesting summary from Azure OpenAI (model: {LLM_MODEL_SUMMARY}).")
                 response_data = azure_summary_client.completion(
                     model_name=LLM_MODEL_SUMMARY,
                     user_prompt=summary_prompt,
@@ -220,6 +317,9 @@ def main():
 
                 if token_tracker and "usage" in response_data:
                     usage = response_data["usage"]
+                    step_logger.log_detail(
+                        f"[{epic}] Token usage logged (prompt: {usage.prompt_tokens}, completion: {usage.completion_tokens})."
+                    )
                     token_tracker.log_usage(model=LLM_MODEL_SUMMARY, input_tokens=usage.prompt_tokens, output_tokens=usage.completion_tokens, total_tokens=usage.total_tokens, task_name=f"summary_generation")
 
                 content_summary = json_parser.extract_and_parse_json(response_data["text"])
@@ -235,13 +335,16 @@ def main():
 
             if complete_epic_data:
                 print(f"     - Creating HTML file for {epic}")
+                step_logger.log_detail(f"[{epic}] Generating HTML report at {HTML_REPORTS_DIR}.")
                 logger.info(f"Creating HTML report for {epic}...")
                 html_file = os.path.join(HTML_REPORTS_DIR, f"{epic}_summary.html")
                 html_generator.generate_epic_html(complete_epic_data, epic, html_file)
             else:
+                step_logger.log_detail(f"[{epic}] Complete epic data missing. HTML generation skipped.")
                 logger.error(f"Could not generate complete data for the HTML creation of {epic}.")
-            
+
             if args.translate != 'false':
+                step_logger.log_detail(f"[{epic}] Translation mode '{args.translate}' active.")
                 azure_translator_client = AzureAIClient()
                 html_translator = HtmlTranslator(
                     ai_client=azure_translator_client,
@@ -253,28 +356,36 @@ def main():
                 english_html_path = os.path.join(HTML_REPORTS_DIR, f"{epic}_summary_englisch.html")
 
                 if not os.path.exists(german_html_path):
+                    step_logger.log_detail(f"[{epic}] German HTML not found. Translation skipped.")
                     logger.warning(f"Translation for {epic} skipped because the German HTML file does not exist.")
                 else:
                     run_translation = False
                     if args.translate == 'true':
                         run_translation = True
+                        step_logger.log_detail(f"[{epic}] Translation forced by command-line argument.")
                         logger.info(f"Translation for {epic} is forced ('--translate true').")
 
                     elif args.translate == 'check':
                         if not os.path.exists(english_html_path):
                             run_translation = True
+                            step_logger.log_detail(f"[{epic}] English HTML missing. Translation will be executed.")
                             logger.info(f"English version for {epic} does not exist. Starting translation ('--translate check').")
                         else:
+                            step_logger.log_detail(f"[{epic}] English HTML already exists. Translation skipped.")
                             logger.info(f"English version for {epic} already exists. Translation will be skipped.")
 
                     if run_translation:
                         try:
                             print(f"     - Translating HTML file for {epic}")
+                            step_logger.log_detail(f"[{epic}] Executing translation process via Azure OpenAI.")
                             html_translator.translate_file(epic)
                         except Exception as e:
+                            step_logger.log_detail(f"[{epic}] Translation failed with error: {e}")
                             logger.error(f"Error during translation of {epic}: {e}")
 
+        step_logger.log_sub_step("Analysis and reporting stage completed.")
     else:
+        step_logger.log_step("Analysis and HTML summary stage skipped (mode set to 'false').")
         print("\n--- Analysis and HTML summary skipped ---")
 
 
